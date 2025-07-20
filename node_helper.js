@@ -2,7 +2,7 @@ const NodeHelper = require("node_helper");
 const fs = require("fs");
 const path = require("path");
 const bodyParser = require("body-parser");
-const express = require("express"); // <-- ADD THIS LINE
+const express = require("express");
 
 module.exports = NodeHelper.create({
 	start: function () {
@@ -19,7 +19,7 @@ module.exports = NodeHelper.create({
 		this.expressApp.use(bodyParser.json());
 		this.expressApp.use(bodyParser.urlencoded({ extended: true }));
 
-		// Serve admin UI - THIS IS THE CORRECTED LINE
+		// Serve admin UI
 		this.expressApp.use("/" + this.name, express.static(path.join(__dirname, "admin_ui")));
 
 		// --- API Endpoints ---
@@ -113,7 +113,7 @@ module.exports = NodeHelper.create({
 	},
 
 	readJsonFile: function (filePath, res) {
-		fs.readFile(filePath, (err, data) => {
+		fs.readFile(filePath, 'utf8', (err, data) => {
 			if (err) {
 				if (res) res.status(500).json({ error: `Error reading ${path.basename(filePath)}.` });
 				return;
@@ -135,11 +135,43 @@ module.exports = NodeHelper.create({
 	// --- Socket Notifications ---
 	socketNotificationReceived: function (notification, payload) {
 		if (notification === "GET_PROJECTS") {
-			fs.readFile(this.projectFilePath, (err, data) => {
-				if (!err) {
-					this.sendSocketNotification("PROJECTS_UPDATED", JSON.parse(data));
-				}
+			const projectsPromise = new Promise((resolve, reject) => {
+				fs.readFile(this.projectFilePath, 'utf8', (err, data) => err ? reject(err) : resolve(JSON.parse(data)));
 			});
+			const namesPromise = new Promise((resolve, reject) => {
+				fs.readFile(this.namesFilePath, 'utf8', (err, data) => err ? reject(err) : resolve(JSON.parse(data)));
+			});
+
+			Promise.all([projectsPromise, namesPromise])
+				.then(([projects, names]) => {
+					this.sendSocketNotification("PROJECTS_UPDATED", { projects, names });
+				})
+				.catch(err => {
+					console.error(`[MMM-HouseProjects] Error reading data files:`, err);
+				});
 		}
+        
+        if (notification === "COMPLETE_PROJECT") {
+            const projectId = payload;
+            fs.readFile(this.projectFilePath, 'utf8', (err, data) => {
+                if (err) {
+                    console.error(`[MMM-HouseProjects] Error reading projects file on complete:`, err);
+                    return;
+                }
+                
+                let projects = JSON.parse(data);
+                const projectIndex = projects.findIndex(p => p.id === projectId);
+
+                if (projectIndex !== -1) {
+                    projects[projectIndex].completed = true;
+                    projects[projectIndex].completedDate = new Date().toISOString();
+                    
+                    this.writeJsonFile(this.projectFilePath, projects, () => {
+                        // After writing, re-read both files to send a consistent update
+                        this.socketNotificationReceived("GET_PROJECTS"); 
+                    });
+                }
+            });
+        }
 	}
 });

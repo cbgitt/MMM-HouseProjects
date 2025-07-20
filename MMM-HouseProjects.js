@@ -1,17 +1,9 @@
 /* global Module, Log, moment */
 
-/* Magic Mirror
- * Module: MMM-HouseProjects
- *
- * By [Your Name]
- * MIT Licensed.
- */
-
 Module.register("MMM-HouseProjects", {
 	defaults: {
 		updateInterval: 60000,
-		remoteFile: "projects.json",
-		fadeSpeed: 4000,
+		fadeSpeed: 2000,
 		title: "House Projects"
 	},
 
@@ -28,20 +20,16 @@ Module.register("MMM-HouseProjects", {
 	// Define start sequence.
 	start: function () {
 		Log.info("Starting module: " + this.name);
-
 		this.projects = [];
+		this.names = [];
 		this.loaded = false;
-
-		// Fetch data on initial load
-		this.getProjects();
-
-		// Schedule subsequent updates
-		this.scheduleUpdate();
+		this.getProjects(); // Initial data load
+		this.scheduleUpdate(); // Schedule subsequent updates
 	},
 
 	// Override dom generator.
 	getDom: function () {
-		var wrapper = document.createElement("div");
+		const wrapper = document.createElement("div");
 
 		if (!this.loaded) {
 			wrapper.innerHTML = "Loading...";
@@ -49,97 +37,73 @@ Module.register("MMM-HouseProjects", {
 			return wrapper;
 		}
 
-		var table = document.createElement("table");
-		table.className = "small";
-
-		var header = document.createElement("header");
+		const header = document.createElement("header");
 		header.innerHTML = this.config.title;
 		wrapper.appendChild(header);
 
-		var tableHeader = document.createElement("tr");
+		const table = document.createElement("table");
+		table.className = "small";
 
-		var descriptionHeader = document.createElement("th");
-		descriptionHeader.innerHTML = "Description";
-		tableHeader.appendChild(descriptionHeader);
+		const tableHeader = table.insertRow();
+		const headers = ["Description", "Group", "Assigned To", "Due Date", "Days Left", "Done"];
+		headers.forEach(h => {
+			const th = document.createElement("th");
+			th.innerHTML = h;
+			tableHeader.appendChild(th);
+		});
+        
+        const activeProjects = this.projects.filter(p => !p.completed);
 
-		var groupHeader = document.createElement("th");
-		groupHeader.innerHTML = "Group";
-		tableHeader.appendChild(groupHeader);
+        if (activeProjects.length === 0) {
+            const noProjectsRow = table.insertRow();
+            const cell = noProjectsRow.insertCell();
+            cell.colSpan = headers.length;
+            cell.innerHTML = "No active projects!";
+            cell.className = "dimmed light small";
+        } else {
+            activeProjects.forEach(project => {
+                const row = table.insertRow();
+                
+                const assignedName = this.names.find(n => n.id === project.nameId)?.name || 'N/A';
+                const dueDate = moment(project.dueDate);
+                const daysRemaining = dueDate.diff(moment(), "days");
 
-		var dueDateHeader = document.createElement("th");
-		dueDateHeader.innerHTML = "Due Date";
-		tableHeader.appendChild(dueDateHeader);
-
-		var daysRemainingHeader = document.createElement("th");
-		daysRemainingHeader.innerHTML = "Days Remaining";
-		tableHeader.appendChild(daysRemainingHeader);
-
-		var completedHeader = document.createElement("th");
-		completedHeader.innerHTML = "Completed";
-		tableHeader.appendChild(completedHeader);
-
-		table.appendChild(tableHeader);
-
-		this.projects.forEach(function (project) {
-			if (!project.completed) {
-				var projectRow = document.createElement("tr");
-
-				var descriptionCell = document.createElement("td");
-				descriptionCell.innerHTML = project.description;
-				projectRow.appendChild(descriptionCell);
-
-				var groupCell = document.createElement("td");
-				groupCell.innerHTML = project.group;
-				projectRow.appendChild(groupCell);
-
-				var dueDateCell = document.createElement("td");
-				dueDateCell.innerHTML = moment(project.dueDate).format("YYYY-MM-DD");
-				projectRow.appendChild(dueDateCell);
-
-				var daysRemainingCell = document.createElement("td");
-				var dueDate = moment(project.dueDate);
-				var now = moment();
-				var daysRemaining = dueDate.diff(now, "days");
-				daysRemainingCell.innerHTML = daysRemaining;
-				projectRow.appendChild(daysRemainingCell);
-
-				var completedCell = document.createElement("td");
-				var checkbox = document.createElement("input");
-				checkbox.type = "checkbox";
-				checkbox.addEventListener("click", () => {
-					this.sendSocketNotification("COMPLETE_PROJECT", project.id);
-				});
-				completedCell.appendChild(checkbox);
-				projectRow.appendChild(completedCell);
-
-				table.appendChild(projectRow);
-			}
-		}.bind(this));
+                row.insertCell().innerHTML = project.description;
+                row.insertCell().innerHTML = project.group;
+                row.insertCell().innerHTML = assignedName;
+                row.insertCell().innerHTML = dueDate.format("MMM Do");
+                row.insertCell().innerHTML = daysRemaining;
+                
+                const completedCell = row.insertCell();
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.dataset.id = project.id;
+                checkbox.addEventListener("click", (e) => {
+                    this.sendSocketNotification("COMPLETE_PROJECT", parseInt(e.target.dataset.id));
+                });
+                completedCell.appendChild(checkbox);
+            });
+        }
 
 		wrapper.appendChild(table);
-
 		return wrapper;
 	},
 
-	scheduleUpdate: function (delay) {
-		var nextLoad = this.config.updateInterval;
-		if (typeof delay !== "undefined" && delay >= 0) {
-			nextLoad = delay;
-		}
-
-		var self = this;
-		setInterval(function () {
-			self.getProjects();
-		}, nextLoad);
+	scheduleUpdate: function () {
+		setInterval(() => {
+			this.getProjects();
+		}, this.config.updateInterval);
 	},
 
 	getProjects: function () {
-		this.sendSocketNotification("GET_PROJECTS", this.config.remoteFile);
+		this.sendSocketNotification("GET_PROJECTS");
 	},
 
+	// This now listens for the correct notification name from the helper
 	socketNotificationReceived: function (notification, payload) {
-		if (notification === "PROJECTS") {
-			this.projects = payload;
+		if (notification === "PROJECTS_UPDATED") {
+			this.projects = payload.projects;
+            this.names = payload.names;
 			this.loaded = true;
 			this.updateDom(this.config.fadeSpeed);
 		}
