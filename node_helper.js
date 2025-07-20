@@ -33,6 +33,7 @@ module.exports = NodeHelper.create({
 		this.expressApp.put(`/${this.name}/api/projects/:id`, (req, res) => this.updateProject(req, res));
 		this.expressApp.delete(`/${this.name}/api/projects/:id`, (req, res) => this.deleteItem(this.projectFilePath, req.params.id, res, "Project"));
 		this.expressApp.put(`/${this.name}/api/projects/:id/complete`, (req, res) => this.completeProject(req, res));
+		this.expressApp.put(`/${this.name}/api/projects/:id/reopen`, (req, res) => this.reopenProject(req, res)); // New endpoint
 
 		// Groups
 		this.expressApp.get(`/${this.name}/api/groups`, (req, res) => this.readJsonFile(this.groupsFilePath, res));
@@ -102,6 +103,24 @@ module.exports = NodeHelper.create({
 			}, res);
 		});
 	},
+    
+    reopenProject: function(req, res) {
+        const projectId = parseInt(req.params.id);
+        fs.readFile(this.projectFilePath, 'utf8', (err, data) => {
+            if (err) return res.status(500).json({ error: "Failed to read projects file." });
+            let projects = JSON.parse(data);
+            const projectIndex = projects.findIndex(p => p.id === projectId);
+            if (projectIndex === -1) return res.status(404).json({ error: "Project not found." });
+            
+            projects[projectIndex].completed = false;
+            projects[projectIndex].completedDate = null;
+            
+            this.writeJsonFile(this.projectFilePath, projects, () => {
+                this.socketNotificationReceived("GET_PROJECTS");
+                res.status(200).json(projects[projectIndex]);
+            }, res);
+        });
+    },
 
 	addItem: function(filePath, itemData, res, itemType) {
 		fs.readFile(filePath, 'utf8', (err, data) => {

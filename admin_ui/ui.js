@@ -126,6 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${project.group}</td>
                     <td>${assignedName}</td>
                     <td>${new Date(project.completedDate).toLocaleString()}</td>
+                    <td class="action-buttons">
+                        <button class="action-button" data-id="${project.id}" title="Re-open"><i data-feather="rotate-ccw"></i></button>
+                        <button class="action-button" data-id="${project.id}" title="Edit"><i data-feather="edit-2"></i></button>
+                        <button class="action-button delete" data-id="${project.id}" title="Delete"><i data-feather="trash-2"></i></button>
+                    </td>
                 `;
             } else {
                 const row = activeBody.insertRow();
@@ -267,18 +272,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionBtn = button.closest('.action-button');
         if (actionBtn) {
             const id = parseInt(actionBtn.dataset.id);
+            let reload = true;
+
             if (actionBtn.title === 'Complete') {
                 const result = await updateData(`projects/${id}/complete`);
                 if (result) showToast('Project marked as complete!');
             } else if (actionBtn.title === 'Edit') {
                 openEditModal(id);
+                reload = false;
             } else if (actionBtn.title === 'Delete') {
                 if (confirm('Are you sure you want to delete this project?')) {
                     const result = await deleteData(`projects/${id}`);
                     if (result) showToast('Project deleted!');
+                } else {
+                    reload = false;
                 }
+            } else if (actionBtn.title === 'Re-open') {
+                const result = await updateData(`projects/${id}/reopen`);
+                if (result) showToast('Project has been re-opened!');
             }
-            if (actionBtn.title !== 'Edit') loadAllData();
+            
+            if (reload) loadAllData();
         }
     });
 
