@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects Dashboard</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <h1>Dashboard</h1>
+            <nav>
+                <ul>
+                    <li class="active" onclick="showPage('home')">Home</li>
+                    <li onclick="showPage('addProject')">Add Project</li>
+                    <li onclick="showPage('projects')">Projects</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Home Page -->
+            <div id="home" class="page active">
+                <h2>Home Dashboard</h2>
+                <div class="dashboard-widgets">
+                    <div class="widget">
+                        <div class="widget-title">Total Projects</div>
+                        <div id="totalProjects" class="widget-value">0</div>
+                    </div>
+                    <div class="widget">
+                        <div class="widget-title">Active Projects</div>
+                        <div id="activeProjects" class="widget-value">0</div>
+                    </div>
+                    <div class="widget">
+                        <div class="widget-title">Completed Projects</div>
+                        <div id="completedProjects" class="widget-value">0</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h3>Projects by Group</h3>
+                    <div id="projectsByGroupChart"></div>
+                </div>
+            </div>
+
+            <!-- Add Project Page -->
+            <div id="addProject" class="page">
+                <h2>Manage & Add Projects</h2>
+
+                <div class="form-section">
+                    <h3>Add New Group</h3>
+                    <div class="form-row">
+                        <input type="text" id="newGroupName" placeholder="Enter new group name">
+                        <button onclick="addGroup()">Add Group</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Add New Name</h3>
+                     <div class="form-row">
+                        <input type="text" id="newName" placeholder="Enter new name">
+                        <button onclick="addName()">Add Name</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Create New Project</h3>
+                    <input type="text" id="description" placeholder="Description of the project" style="margin-bottom: 15px;">
+                    <div class="form-row">
+                        <select id="group"></select>
+                        <select id="name"></select>
+                        <input type="date" id="dueDate">
+                    </div>
+                    <button onclick="addProject()">Add Project</button>
+                </div>
+            </div>
+
+            <!-- Projects Page -->
+            <div id="projects" class="page">
+                <h2>Project Lists</h2>
+                <h3>Active Projects</h3>
+                <table id="activeProjectsTable" class="projects-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Group</th>
+                            <th>Name</th>
+                            <th>Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <h3>Completed Projects</h3>
+                <table id="completedProjectsTable" class="projects-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Group</th>
+                            <th>Name</th>
+                            <th>Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // SPA Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.sidebar nav li').forEach(li => li.classList.remove('active'));
+            document.querySelector(`.sidebar nav li[onclick="showPage('${pageId}')"]`).classList.add('active');
+        }
+
+        // Data Loading and Rendering
+        async function loadInitialData() {
+            const [projects, groups, names] = await Promise.all([
+                fetch("/MMM-HouseProjects/projects").then(res => res.json()),
+                fetch("/MMM-HouseProjects/groups").then(res => res.json()),
+                fetch("/MMM-HouseProjects/names").then(res => res.json())
+            ]);
+
+            renderDashboard(projects, groups);
+            renderProjectLists(projects, names);
+            populateDropdowns(groups, names);
+        }
+
+        function renderDashboard(projects, groups) {
+            const total = projects.length;
+            const completed = projects.filter(p => p.completed).length;
+            const active = total - completed;
+
+            document.getElementById('totalProjects').textContent = total;
+            document.getElementById('activeProjects').textContent = active;
+            document.getElementById('completedProjects').textContent = completed;
+
+            const projectsByGroup = groups.map(group => {
+                const count = projects.filter(p => p.group === group.name).length;
+                return { name: group.name, count };
+            });
+
+            const chartContainer = document.getElementById('projectsByGroupChart');
+            chartContainer.innerHTML = '';
+            const maxCount = Math.max(...projectsByGroup.map(g => g.count), 0);
+            
+            projectsByGroup.forEach(group => {
+                const barWidth = maxCount > 0 ? (group.count / maxCount) * 100 : 0;
+                chartContainer.innerHTML += `
+                    <div class="chart-bar">
+                        <div class="chart-label">${group.name}</div>
+                        <div class="chart-value" style="width: ${barWidth}%;">${group.count}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderProjectLists(projects, names) {
+            const activeBody = document.getElementById('activeProjectsTable').getElementsByTagName('tbody')[0];
+            const completedBody = document.getElementById('completedProjectsTable').getElementsByTagName('tbody')[0];
+            activeBody.innerHTML = '';
+            completedBody.innerHTML = '';
+
+            projects.forEach(project => {
+                const row = document.createElement('tr');
+                const assignedName = names.find(n => n.id === project.nameId)?.name || 'N/A';
+                row.innerHTML = `
+                    <td>${project.description}</td>
+                    <td>${project.group}</td>
+                    <td>${assignedName}</td>
+                    <td>${new Date(project.dueDate).toLocaleDateString()}</td>
+                `;
+                if (project.completed) {
+                    completedBody.appendChild(row);
+                } else {
+                    activeBody.appendChild(row);
+                }
+            });
+        }
+
+        function populateDropdowns(groups, names) {
+            const groupSelect = document.getElementById('group');
+            const nameSelect = document.getElementById('name');
+            groupSelect.innerHTML = '<option value="">Select Group</option>';
+            nameSelect.innerHTML = '<option value="">Select Name</option>';
+
+            groups.forEach(group => {
+                groupSelect.innerHTML += `<option value="${group.name}">${group.name}</option>`;
+            });
+            names.forEach(name => {
+                nameSelect.innerHTML += `<option value="${name.id}">${name.name}</option>`;
+            });
+        }
+
+        // Form Submission Functions
+        async function addGroup() {
+            const name = document.getElementById('newGroupName').value;
+            if (!name) return;
+            await fetch("/MMM-HouseProjects/group", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+            document.getElementById('newGroupName').value = '';
+            loadInitialData();
+        }
+
+        async function addName() {
+            const name = document.getElementById('newName').value;
+            if (!name) return;
+            await fetch("/MMM-HouseProjects/name", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+            document.getElementById('newName').value = '';
+            loadInitialData();
+        }
+
+        async function addProject() {
+            const description = document.getElementById('description').value;
+            const group = document.getElementById('group').value;
+            const nameId = document.getElementById('name').value;
+            const dueDate = document.getElementById('dueDate').value;
+
+            if (!description || !group || !nameId || !dueDate) {
+                alert("Please fill out all project fields.");
+                return;
+            }
+
+            await fetch("/MMM-HouseProjects/project", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ description, group, nameId: parseInt(nameId), dueDate })
+            });
+            
+            document.getElementById('description').value = '';
+            document.getElementById('group').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('dueDate').value = '';
+            loadInitialData();
+        }
+
+        // Initial Load
+        window.onload = loadInitialData;
+    </script>
+</body>
+</html>
