@@ -30,6 +30,8 @@ module.exports = NodeHelper.create({
 		// Projects
 		this.expressApp.get(`/${this.name}/api/projects`, (req, res) => this.readJsonFile(this.projectFilePath, res));
 		this.expressApp.post(`/${this.name}/api/projects`, (req, res) => this.addProject(req, res));
+		this.expressApp.put(`/${this.name}/api/projects/:id`, (req, res) => this.updateProject(req, res));
+		this.expressApp.delete(`/${this.name}/api/projects/:id`, (req, res) => this.deleteItem(this.projectFilePath, req.params.id, res, "Project"));
 		this.expressApp.put(`/${this.name}/api/projects/:id/complete`, (req, res) => this.completeProject(req, res));
 
 		// Groups
@@ -45,7 +47,7 @@ module.exports = NodeHelper.create({
 
 	// --- API Logic ---
 	addProject: function(req, res) {
-		fs.readFile(this.projectFilePath, (err, data) => {
+		fs.readFile(this.projectFilePath, 'utf8', (err, data) => {
 			if (err) return res.status(500).json({ error: "Failed to read projects file." });
 			const projects = JSON.parse(data);
 			const newProject = {
@@ -55,19 +57,37 @@ module.exports = NodeHelper.create({
 				group: req.body.group,
 				nameId: req.body.nameId,
 				dueDate: req.body.dueDate,
-				completed: false
+				completed: false,
+                completedDate: null
 			};
 			projects.push(newProject);
 			this.writeJsonFile(this.projectFilePath, projects, () => {
-				this.sendSocketNotification("PROJECTS_UPDATED", projects);
+				this.socketNotificationReceived("GET_PROJECTS");
 				res.status(201).json(newProject);
 			}, res);
 		});
 	},
 
+    updateProject: function(req, res) {
+        const projectId = parseInt(req.params.id);
+        fs.readFile(this.projectFilePath, 'utf8', (err, data) => {
+            if (err) return res.status(500).json({ error: "Failed to read projects file." });
+            let projects = JSON.parse(data);
+            const projectIndex = projects.findIndex(p => p.id === projectId);
+            if (projectIndex === -1) return res.status(404).json({ error: "Project not found." });
+
+            projects[projectIndex] = { ...projects[projectIndex], ...req.body };
+
+            this.writeJsonFile(this.projectFilePath, projects, () => {
+                this.socketNotificationReceived("GET_PROJECTS");
+                res.status(200).json(projects[projectIndex]);
+            }, res);
+        });
+    },
+
 	completeProject: function(req, res) {
 		const projectId = parseInt(req.params.id);
-		fs.readFile(this.projectFilePath, (err, data) => {
+		fs.readFile(this.projectFilePath, 'utf8', (err, data) => {
 			if (err) return res.status(500).json({ error: "Failed to read projects file." });
 			let projects = JSON.parse(data);
 			const projectIndex = projects.findIndex(p => p.id === projectId);
@@ -77,14 +97,14 @@ module.exports = NodeHelper.create({
 			projects[projectIndex].completedDate = new Date().toISOString();
 			
 			this.writeJsonFile(this.projectFilePath, projects, () => {
-				this.sendSocketNotification("PROJECTS_UPDATED", projects);
+				this.socketNotificationReceived("GET_PROJECTS");
 				res.status(200).json(projects[projectIndex]);
 			}, res);
 		});
 	},
 
 	addItem: function(filePath, itemData, res, itemType) {
-		fs.readFile(filePath, (err, data) => {
+		fs.readFile(filePath, 'utf8', (err, data) => {
 			if (err) return res.status(500).json({ error: `Failed to read ${itemType}s file.` });
 			const items = JSON.parse(data);
 			const newItem = { id: Date.now(), name: itemData.name };
@@ -95,13 +115,19 @@ module.exports = NodeHelper.create({
 
 	deleteItem: function(filePath, itemId, res, itemType) {
 		const id = parseInt(itemId);
-		fs.readFile(filePath, (err, data) => {
+		fs.readFile(filePath, 'utf8', (err, data) => {
 			if (err) return res.status(500).json({ error: `Failed to read ${itemType}s file.` });
 			let items = JSON.parse(data);
-			const newItems = items.filter(item => item.id !== id);
-			if (items.length === newItems.length) return res.status(404).json({ error: `${itemType} not found.` });
+			const initialLength = items.length;
+			items = items.filter(item => item.id !== id);
+			if (items.length === initialLength) return res.status(404).json({ error: `${itemType} not found.` });
 			
-			this.writeJsonFile(filePath, newItems, () => res.status(200).json({ message: `${itemType} deleted successfully.` }), res);
+			this.writeJsonFile(filePath, items, () => {
+                if (itemType === "Project") {
+                    this.socketNotificationReceived("GET_PROJECTS");
+                }
+                res.status(200).json({ message: `${itemType} deleted successfully.` })
+            }, res);
 		});
 	},
 
@@ -167,7 +193,6 @@ module.exports = NodeHelper.create({
                     projects[projectIndex].completedDate = new Date().toISOString();
                     
                     this.writeJsonFile(this.projectFilePath, projects, () => {
-                        // After writing, re-read both files to send a consistent update
                         this.socketNotificationReceived("GET_PROJECTS"); 
                     });
                 }

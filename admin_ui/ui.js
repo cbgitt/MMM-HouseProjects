@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_BASE_URL = `/MMM-HouseProjects/api`;
     let projectsChart = null;
+    let allProjects = [], allGroups = [], allNames = [];
 
     // --- Navigation ---
     window.showPage = (pageId) => {
@@ -59,9 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const updateData = async (endpoint) => {
+    const updateData = async (endpoint, data = null) => {
          try {
-            const response = await fetch(`${API_BASE_URL}/${endpoint}`, { method: 'PUT' });
+            const options = { 
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+            };
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            const response = await fetch(`${API_BASE_URL}/${endpoint}`, options);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return await response.json();
         } catch (error) {
@@ -71,25 +79,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-
     // --- Rendering ---
-    const renderDashboard = (projects, names) => {
-        const completedThisMonth = projects.filter(p => p.completed && new Date(p.completedDate).getMonth() === new Date().getMonth()).length;
-        document.getElementById('activeProjects').textContent = projects.filter(p => !p.completed).length;
+    const renderDashboard = () => {
+        const completedThisMonth = allProjects.filter(p => p.completed && new Date(p.completedDate).getMonth() === new Date().getMonth()).length;
+        document.getElementById('activeProjects').textContent = allProjects.filter(p => !p.completed).length;
         document.getElementById('completedProjects').textContent = completedThisMonth;
-        document.getElementById('totalNames').textContent = names.length;
+        document.getElementById('totalNames').textContent = allNames.length;
     };
     
-    const renderGroupChart = (projects, groups) => {
+    const renderGroupChart = () => {
         const ctx = document.getElementById('projectsByGroupChart').getContext('2d');
-        const groupCounts = groups.map(group => projects.filter(p => p.group === group.name && !p.completed).length);
+        const groupCounts = allGroups.map(group => allProjects.filter(p => p.group === group.name && !p.completed).length);
 
         if (projectsChart) projectsChart.destroy();
         
         projectsChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: groups.map(g => g.name),
+                labels: allGroups.map(g => g.name),
                 datasets: [{
                     data: groupCounts,
                     backgroundColor: ['#4a90e2', '#50e3c2', '#f5a623', '#bd10e0', '#7ed321', '#9013fe'],
@@ -104,35 +111,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const renderProjectTable = (projects, names) => {
-        const tableBody = document.getElementById('activeProjectsTable').getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = '';
-        projects.filter(p => !p.completed).forEach(project => {
-            const assignedName = names.find(n => n.id === project.nameId)?.name || 'N/A';
-            const row = tableBody.insertRow();
-            row.innerHTML = `
-                <td>${project.description}</td>
-                <td>${project.group}</td>
-                <td>${assignedName}</td>
-                <td>${new Date(project.dueDate).toLocaleDateString()}</td>
-                <td><button class="action-button" data-id="${project.id}">Complete</button></td>
-            `;
+    const renderProjectTables = () => {
+        const activeBody = document.getElementById('activeProjectsTable').getElementsByTagName('tbody')[0];
+        const completedBody = document.getElementById('completedProjectsTable').getElementsByTagName('tbody')[0];
+        activeBody.innerHTML = '';
+        completedBody.innerHTML = '';
+
+        allProjects.forEach(project => {
+            const assignedName = allNames.find(n => n.id === project.nameId)?.name || 'N/A';
+            if (project.completed) {
+                const row = completedBody.insertRow();
+                row.innerHTML = `
+                    <td>${project.description}</td>
+                    <td>${project.group}</td>
+                    <td>${assignedName}</td>
+                    <td>${new Date(project.completedDate).toLocaleString()}</td>
+                `;
+            } else {
+                const row = activeBody.insertRow();
+                row.innerHTML = `
+                    <td>${project.description}</td>
+                    <td>${project.group}</td>
+                    <td>${assignedName}</td>
+                    <td>${new Date(project.dueDate).toLocaleDateString()}</td>
+                    <td class="action-buttons">
+                        <button class="action-button complete" data-id="${project.id}" title="Complete"><i data-feather="check"></i></button>
+                        <button class="action-button" data-id="${project.id}" title="Edit"><i data-feather="edit-2"></i></button>
+                        <button class="action-button delete" data-id="${project.id}" title="Delete"><i data-feather="trash-2"></i></button>
+                    </td>
+                `;
+            }
         });
+        feather.replace();
     };
 
-    const renderManageLists = (groups, names) => {
+    const renderManageLists = () => {
         const groupList = document.getElementById('group-list');
         const nameList = document.getElementById('name-list');
         groupList.innerHTML = '';
         nameList.innerHTML = '';
-        groups.forEach(g => groupList.innerHTML += `<li>${g.name}<button class="delete-btn" data-type="groups" data-id="${g.id}"><i data-feather="x-circle"></i></button></li>`);
-        names.forEach(n => nameList.innerHTML += `<li>${n.name}<button class="delete-btn" data-type="names" data-id="${n.id}"><i data-feather="x-circle"></i></button></li>`);
+        allGroups.forEach(g => groupList.innerHTML += `<li>${g.name}<button class="delete-btn" data-type="groups" data-id="${g.id}"><i data-feather="x-circle"></i></button></li>`);
+        allNames.forEach(n => nameList.innerHTML += `<li>${n.name}<button class="delete-btn" data-type="names" data-id="${n.id}"><i data-feather="x-circle"></i></button></li>`);
         feather.replace();
     };
 
-    const populateDropdowns = (groups, names) => {
-        const groupSelect = document.getElementById('group-select');
-        const nameSelect = document.getElementById('name-select');
+    const populateDropdowns = (groups, names, elementPrefix = '') => {
+        const groupSelect = document.getElementById(`${elementPrefix}group-select`);
+        const nameSelect = document.getElementById(`${elementPrefix}name-select`);
         groupSelect.innerHTML = '<option value="">Select Group</option>';
         nameSelect.innerHTML = '<option value="">Select Name</option>';
         groups.forEach(g => groupSelect.innerHTML += `<option value="${g.name}">${g.name}</option>`);
@@ -180,12 +205,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    document.addEventListener('click', async (e) => {
-        const deleteBtn = e.target.closest('.delete-btn');
-        const completeBtn = e.target.closest('.action-button');
+    // --- Modal Logic ---
+    window.openEditModal = (projectId) => {
+        const project = allProjects.find(p => p.id === projectId);
+        if (!project) return;
+        
+        document.getElementById('edit-project-id').value = project.id;
+        document.getElementById('edit-description').value = project.description;
+        document.getElementById('edit-dueDate').value = project.dueDate.split('T')[0];
+        
+        populateDropdowns(allGroups, allNames, 'edit-');
+        document.getElementById('edit-group-select').value = project.group;
+        document.getElementById('edit-name-select').value = project.nameId;
+        
+        document.getElementById('edit-modal').style.display = 'flex';
+    };
 
-        if (deleteBtn) {
-            const { type, id } = deleteBtn.dataset;
+    window.closeEditModal = () => {
+        document.getElementById('edit-modal').style.display = 'none';
+    };
+
+    window.saveProjectChanges = async () => {
+        const projectId = parseInt(document.getElementById('edit-project-id').value);
+        const updatedProject = {
+            description: document.getElementById('edit-description').value.trim(),
+            group: document.getElementById('edit-group-select').value,
+            nameId: parseInt(document.getElementById('edit-name-select').value),
+            dueDate: document.getElementById('edit-dueDate').value
+        };
+
+        if (!updatedProject.description || !updatedProject.group || !updatedProject.nameId || !updatedProject.dueDate) {
+            return showToast('Please fill out all fields.');
+        }
+
+        const result = await updateData(`projects/${projectId}`, updatedProject);
+        if (result) {
+            showToast('Project updated!');
+            closeEditModal();
+            loadAllData();
+        }
+    };
+
+    // --- Main Click Handler ---
+    document.addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        const manageDeleteBtn = button.closest('.delete-btn');
+        if (manageDeleteBtn) {
+            const { type, id } = manageDeleteBtn.dataset;
             if (confirm(`Are you sure you want to delete this item?`)) {
                 const result = await deleteData(`${type}/${id}`);
                 if (result) {
@@ -193,31 +261,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadAllData();
                 }
             }
+            return;
         }
-        
-        if (completeBtn) {
-            const { id } = completeBtn.dataset;
-            const result = await updateData(`projects/${id}/complete`);
-            if (result) {
-                showToast('Project marked as complete!');
-                loadAllData();
+
+        const actionBtn = button.closest('.action-button');
+        if (actionBtn) {
+            const id = parseInt(actionBtn.dataset.id);
+            if (actionBtn.title === 'Complete') {
+                const result = await updateData(`projects/${id}/complete`);
+                if (result) showToast('Project marked as complete!');
+            } else if (actionBtn.title === 'Edit') {
+                openEditModal(id);
+            } else if (actionBtn.title === 'Delete') {
+                if (confirm('Are you sure you want to delete this project?')) {
+                    const result = await deleteData(`projects/${id}`);
+                    if (result) showToast('Project deleted!');
+                }
             }
+            if (actionBtn.title !== 'Edit') loadAllData();
         }
     });
 
     // --- Initial Load ---
     const loadAllData = async () => {
-        const [projects, groups, names] = await Promise.all([
+        [allProjects, allGroups, allNames] = await Promise.all([
             fetchData('projects'),
             fetchData('groups'),
             fetchData('names')
         ]);
         
-        renderDashboard(projects, names);
-        renderGroupChart(projects, groups);
-        renderProjectTable(projects, names);
-        renderManageLists(groups, names);
-        populateDropdowns(groups, names);
+        renderDashboard();
+        renderGroupChart();
+        renderProjectTables();
+        renderManageLists();
+        populateDropdowns(allGroups, allNames);
         feather.replace();
     };
 

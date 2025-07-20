@@ -81,6 +81,13 @@
                         <tbody></tbody>
                     </table>
                 </div>
+                <div class="card">
+                    <h3>Completed Projects</h3>
+                    <table id="completedProjectsTable" class="projects-table">
+                        <thead><tr><th>Description</th><th>Group</th><th>Assigned To</th><th>Completed On</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Manage Data Page -->
@@ -107,6 +114,25 @@
             </div>
         </main>
     </div>
+
+    <!-- Edit Project Modal -->
+    <div id="edit-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content card">
+            <h3>Edit Project</h3>
+            <input type="hidden" id="edit-project-id">
+            <div class="modal-form">
+                <input type="text" id="edit-description" placeholder="Description">
+                <select id="edit-group-select"></select>
+                <select id="edit-name-select"></select>
+                <input type="date" id="edit-dueDate">
+            </div>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeEditModal()">Cancel</button>
+                <button onclick="saveProjectChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast"></div>
     <script src="ui.js"></script>
 </body>
