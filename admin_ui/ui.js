@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${project.description}</td>
                     <td>${project.group}</td>
                     <td>${assignedName}</td>
+                    <td>${new Date(project.dateCreated).toLocaleDateString()}</td>
                     <td>${new Date(project.completedDate).toLocaleString()}</td>
                     <td class="action-buttons">
                         <button class="action-button" data-id="${project.id}" title="Re-open"><i data-feather="rotate-ccw"></i></button>
@@ -138,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${project.description}</td>
                     <td>${project.group}</td>
                     <td>${assignedName}</td>
+                    <td>${new Date(project.dateCreated).toLocaleDateString()}</td>
                     <td>${new Date(project.dueDate).toLocaleDateString()}</td>
                     <td class="action-buttons">
                         <button class="action-button complete" data-id="${project.id}" title="Complete"><i data-feather="check"></i></button>
