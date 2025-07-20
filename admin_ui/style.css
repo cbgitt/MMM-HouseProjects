@@ -2,6 +2,7 @@
     --primary-color: #4a90e2;
     --secondary-color: #50e3c2;
     --danger-color: #e74c3c;
+    --success-color: #2ecc71;
     --bg-color: #f4f7fa;
     --sidebar-bg: #ffffff;
     --card-bg: #ffffff;
@@ -211,7 +212,7 @@ button .feather {
     color: var(--danger-color);
 }
 .action-button.complete {
-    background-color: #2ecc71;
+    background-color: var(--success-color);
     color: white;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -219,6 +220,14 @@ button .feather {
 }
 .action-button.complete:hover {
     background-color: #27ae60;
+}
+.text-green {
+    color: var(--success-color);
+    font-weight: bold;
+}
+.text-red {
+    color: var(--danger-color);
+    font-weight: bold;
 }
 
 

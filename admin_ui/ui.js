@@ -121,12 +121,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const assignedName = allNames.find(n => n.id === project.nameId)?.name || 'N/A';
             if (project.completed) {
                 const row = completedBody.insertRow();
+                const createdDate = new Date(project.dateCreated);
+                const completedDate = new Date(project.completedDate);
+                const dueDate = new Date(project.dueDate);
+
+                // Calculate days to complete
+                const timeDiff = completedDate.getTime() - createdDate.getTime();
+                const daysToComplete = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                // Determine color class based on due date
+                let colorClass = '';
+                // Reset hours to compare dates only
+                const completedDay = new Date(completedDate).setHours(0,0,0,0);
+                const dueDay = new Date(dueDate).setHours(0,0,0,0);
+
+                if (completedDay < dueDay) {
+                    colorClass = 'text-green';
+                } else if (completedDay > dueDay) {
+                    colorClass = 'text-red';
+                }
+
                 row.innerHTML = `
                     <td>${project.description}</td>
                     <td>${project.group}</td>
                     <td>${assignedName}</td>
-                    <td>${new Date(project.dateCreated).toLocaleDateString()}</td>
-                    <td>${new Date(project.completedDate).toLocaleString()}</td>
+                    <td>${createdDate.toLocaleDateString()}</td>
+                    <td>${completedDate.toLocaleString()}</td>
+                    <td class="${colorClass}">${daysToComplete} day(s)</td>
                     <td class="action-buttons">
                         <button class="action-button" data-id="${project.id}" title="Re-open"><i data-feather="rotate-ccw"></i></button>
                         <button class="action-button" data-id="${project.id}" title="Edit"><i data-feather="edit-2"></i></button>
