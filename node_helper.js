@@ -2,6 +2,7 @@ const NodeHelper = require("node_helper");
 const fs = require("fs");
 const path = require("path");
 const bodyParser = require("body-parser");
+const express = require("express"); // <-- ADD THIS LINE
 
 module.exports = NodeHelper.create({
 	start: function () {
@@ -18,8 +19,8 @@ module.exports = NodeHelper.create({
 		this.expressApp.use(bodyParser.json());
 		this.expressApp.use(bodyParser.urlencoded({ extended: true }));
 
-		// Serve admin UI
-		this.expressApp.use("/" + this.name, this.expressApp.static(path.join(__dirname, "admin_ui")));
+		// Serve admin UI - THIS IS THE CORRECTED LINE
+		this.expressApp.use("/" + this.name, express.static(path.join(__dirname, "admin_ui")));
 
 		// --- API Endpoints ---
 		this.createApiEndpoints();
