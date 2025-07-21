@@ -134,6 +134,9 @@ module.exports = NodeHelper.create({
 			const groupIndex = groups.findIndex(g => g.id === groupId);
 			if (groupIndex === -1) return res.status(404).json({ error: "Group not found." });
 
+			if (!groups[groupIndex].subgroups) {
+				groups[groupIndex].subgroups = [];
+			}
 			const newSubgroup = { id: Date.now(), name: req.body.name };
 			groups[groupIndex].subgroups.push(newSubgroup);
 			this.writeJsonFile(this.groupsFilePath, groups, () => res.status(201).json(newSubgroup));

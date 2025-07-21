@@ -349,10 +349,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (button.classList.contains('delete-btn')) {
             const { type, id, groupId } = button.dataset;
-            let endpoint = type === 'subgroups' ? `groups/${groupId}/subgroups/${id}` : `groups/${id}`;
-            if (type === 'names') endpoint = `names/${id}`;
+            let endpoint = '';
+            if (type === 'groups') {
+                endpoint = `groups/${id}`;
+            } else if (type === 'subgroups') {
+                endpoint = `groups/${groupId}/subgroups/${id}`;
+            } else if (type === 'names') {
+                endpoint = `names/${id}`;
+            }
 
-            if (confirm(`Are you sure you want to delete this item?`)) {
+            if (endpoint && confirm(`Are you sure you want to delete this item?`)) {
                 const result = await deleteData(endpoint);
                 if (result) {
                     showToast('Item deleted!');
