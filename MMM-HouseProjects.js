@@ -67,9 +67,12 @@ Module.register("MMM-HouseProjects", {
                 const assignedName = this.names.find(n => n.id === project.nameId)?.name || 'N/A';
                 const dueDate = moment(project.dueDate);
                 const daysRemaining = dueDate.diff(moment(), "days");
+                
+                // This is the updated part for displaying the group and subgroup
+                const groupDisplay = project.subgroup ? `${project.group}:${project.subgroup}` : project.group;
 
                 row.insertCell().innerHTML = project.description;
-                row.insertCell().innerHTML = project.group;
+                row.insertCell().innerHTML = groupDisplay; // Updated line
                 row.insertCell().innerHTML = assignedName;
                 row.insertCell().innerHTML = dueDate.format("MMM Do");
                 row.insertCell().innerHTML = daysRemaining;
