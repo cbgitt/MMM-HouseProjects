@@ -68,6 +68,7 @@
                         <div class="form-row">
                             <input type="text" id="description" placeholder="Description of the project">
                             <select id="group-select"></select>
+                            <select id="subgroup-select" style="display: none;"></select>
                             <select id="name-select"></select>
                             <input type="date" id="dueDate">
                             <button onclick="addProject()"><i data-feather="plus"></i> Add</button>
@@ -123,6 +124,7 @@
             <div class="modal-form">
                 <input type="text" id="edit-description" placeholder="Description">
                 <select id="edit-group-select"></select>
+                <select id="edit-subgroup-select" style="display: none;"></select>
                 <select id="edit-name-select"></select>
                 <input type="date" id="edit-dueDate">
             </div>

@@ -203,32 +203,29 @@ document.addEventListener('DOMContentLoaded', () => {
         feather.replace();
     };
 
-    const populateDropdowns = (groups, names, elementPrefix = '') => {
-        const groupSelect = document.getElementById(`${elementPrefix}group-select`);
-        const nameSelect = document.getElementById(`${elementPrefix}name-select`);
+    const populateGroupDropdown = (prefix = '') => {
+        const groupSelect = document.getElementById(`${prefix}group-select`);
         groupSelect.innerHTML = '<option value="">Select Group</option>';
-        nameSelect.innerHTML = '<option value="">Select Name</option>';
-        
-        groups.forEach(group => {
-            if (!group.subgroups || group.subgroups.length === 0) {
-                const option = document.createElement('option');
-                option.value = group.name;
-                option.textContent = group.name;
-                groupSelect.appendChild(option);
-            } else {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = group.name;
-                 group.subgroups.forEach(subgroup => {
-                    const option = document.createElement('option');
-                    option.value = `${group.name}:${subgroup.name}`;
-                    option.textContent = subgroup.name;
-                    optgroup.appendChild(option);
-                });
-                groupSelect.appendChild(optgroup);
-            }
+        allGroups.forEach(group => {
+            groupSelect.innerHTML += `<option value="${group.id}">${group.name}</option>`;
         });
+    };
 
-        names.forEach(n => nameSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`);
+    const handleGroupChange = (prefix = '') => {
+        const groupSelect = document.getElementById(`${prefix}group-select`);
+        const subgroupSelect = document.getElementById(`${prefix}subgroup-select`);
+        const selectedGroupId = parseInt(groupSelect.value);
+        const selectedGroup = allGroups.find(g => g.id === selectedGroupId);
+
+        subgroupSelect.innerHTML = '<option value="">Select Subgroup</option>';
+        if (selectedGroup && selectedGroup.subgroups && selectedGroup.subgroups.length > 0) {
+            selectedGroup.subgroups.forEach(sg => {
+                subgroupSelect.innerHTML += `<option value="${sg.name}">${sg.name}</option>`;
+            });
+            subgroupSelect.style.display = 'block';
+        } else {
+            subgroupSelect.style.display = 'none';
+        }
     };
 
     // --- Event Handlers ---
@@ -255,9 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.addProject = async () => {
+        const groupSelect = document.getElementById('group-select');
+        const selectedGroup = allGroups.find(g => g.id === parseInt(groupSelect.value));
         const project = {
             description: document.getElementById('description').value.trim(),
-            group: document.getElementById('group-select').value,
+            group: selectedGroup ? selectedGroup.name : '',
+            subgroup: document.getElementById('subgroup-select').value,
             nameId: parseInt(document.getElementById('name-select').value),
             dueDate: document.getElementById('dueDate').value
         };
@@ -267,7 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await postData('projects', project);
         if (result) {
             showToast('Project created!');
-            ['description', 'group-select', 'name-select', 'dueDate'].forEach(id => document.getElementById(id).value = '');
+            ['description', 'group-select', 'subgroup-select', 'name-select', 'dueDate'].forEach(id => document.getElementById(id).value = '');
+            handleGroupChange();
             loadAllData();
         }
     };
@@ -281,10 +282,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-description').value = project.description;
         document.getElementById('edit-dueDate').value = project.dueDate.split('T')[0];
         
-        populateDropdowns(allGroups, allNames, 'edit-');
-        const groupValue = project.subgroup ? `${project.group}:${project.subgroup}` : project.group;
-        document.getElementById('edit-group-select').value = groupValue;
-        document.getElementById('edit-name-select').value = project.nameId;
+        populateGroupDropdown('edit-');
+        const group = allGroups.find(g => g.name === project.group);
+        if (group) {
+            document.getElementById('edit-group-select').value = group.id;
+            handleGroupChange('edit-'); // Populate subgroups
+            if (project.subgroup) {
+                document.getElementById('edit-subgroup-select').value = project.subgroup;
+            }
+        }
+        
+        const nameSelect = document.getElementById('edit-name-select');
+        nameSelect.innerHTML = '<option value="">Select Name</option>';
+        allNames.forEach(n => nameSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`);
+        nameSelect.value = project.nameId;
         
         document.getElementById('edit-modal').style.display = 'flex';
     };
@@ -295,9 +306,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.saveProjectChanges = async () => {
         const projectId = parseInt(document.getElementById('edit-project-id').value);
+        const groupSelect = document.getElementById('edit-group-select');
+        const selectedGroup = allGroups.find(g => g.id === parseInt(groupSelect.value));
+        
         const updatedProject = {
             description: document.getElementById('edit-description').value.trim(),
-            group: document.getElementById('edit-group-select').value,
+            group: selectedGroup ? selectedGroup.name : '',
+            subgroup: document.getElementById('edit-subgroup-select').value,
             nameId: parseInt(document.getElementById('edit-name-select').value),
             dueDate: document.getElementById('edit-dueDate').value
         };
@@ -386,7 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGroupChart();
         renderProjectTables();
         renderManageLists();
-        populateDropdowns(allGroups, allNames);
+        
+        populateGroupDropdown();
+        const nameSelect = document.getElementById('name-select');
+        nameSelect.innerHTML = '<option value="">Select Name</option>';
+        allNames.forEach(n => nameSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`);
+        
+        document.getElementById('group-select').addEventListener('change', () => handleGroupChange());
+        document.getElementById('edit-group-select').addEventListener('change', () => handleGroupChange('edit-'));
+
         feather.replace();
     };
 

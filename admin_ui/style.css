@@ -138,7 +138,7 @@ h3 {
 .form-section { margin-bottom: 0; }
 .form-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
     gap: 15px;
     align-items: center;
     margin-bottom: 15px;

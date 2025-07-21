@@ -50,13 +50,12 @@ module.exports = NodeHelper.create({
 		fs.readFile(this.projectFilePath, 'utf8', (err, data) => {
 			if (err) return res.status(500).json({ error: "Failed to read projects file." });
 			const projects = JSON.parse(data);
-			const [group, subgroup] = req.body.group.split(':');
 			const newProject = {
 				id: Date.now(),
 				dateCreated: new Date().toISOString(),
 				description: req.body.description,
-				group: group,
-				subgroup: subgroup || null,
+				group: req.body.group,
+				subgroup: req.body.subgroup || null,
 				nameId: req.body.nameId,
 				dueDate: req.body.dueDate,
 				completed: false,
@@ -78,11 +77,9 @@ module.exports = NodeHelper.create({
             const projectIndex = projects.findIndex(p => p.id === projectId);
             if (projectIndex === -1) return res.status(404).json({ error: "Project not found." });
 
-			const [group, subgroup] = req.body.group.split(':');
 			const updatedData = {
 				...req.body,
-				group,
-				subgroup: subgroup || null
+				subgroup: req.body.subgroup || null
 			};
             projects[projectIndex] = { ...projects[projectIndex], ...updatedData };
 
@@ -114,7 +111,7 @@ module.exports = NodeHelper.create({
             
             this.writeJsonFile(this.projectFilePath, projects, () => {
                 this.socketNotificationReceived("GET_PROJECTS");
-                res.status(200).json(projects[projectIndex]);
+                if (res) res.status(200).json(projects[projectIndex]);
             });
         });
 	},
