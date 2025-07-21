@@ -132,6 +132,7 @@ h3 {
 }
 .chart-container {
     height: 350px;
+    position: relative; /* This is the fix */
 }
 
 /* Forms */
