@@ -242,26 +242,21 @@ button .feather {
     border-collapse: collapse;
 }
 .management-table th, .management-table td {
-    padding: 12px 15px;
+    padding: 12px 0;
     text-align: left;
+    border: none;
     border-bottom: 1px solid var(--border-color);
 }
 .management-table thead th {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--text-light);
-    text-transform: uppercase;
     border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
 }
 .management-table td {
     vertical-align: top;
-    padding-top: 20px;
+    padding-top: 15px;
 }
 .management-table .group-name {
     font-weight: bold;
-}
-.management-table .actions-cell {
-    text-align: right;
 }
 .subgroup-management-item {
     display: flex;
@@ -291,6 +286,7 @@ button .feather {
 .item-list li:nth-child(odd) {
     background-color: var(--bg-color);
 }
+
 
 /* Modal */
 .modal-overlay {

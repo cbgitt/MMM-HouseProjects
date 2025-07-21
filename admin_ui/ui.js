@@ -146,9 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${completedDate.toLocaleString()}</td>
                     <td class="${colorClass}">${daysToComplete} day(s)</td>
                     <td class="action-buttons">
-                        <button class="action-button" data-id="${project.id}" title="Re-open"><i data-feather="rotate-ccw"></i></button>
-                        <button class="action-button" data-id="${project.id}" title="Edit"><i data-feather="edit-2"></i></button>
-                        <button class="action-button delete" data-id="${project.id}" title="Delete"><i data-feather="trash-2"></i></button>
+                        <button class="action-button" data-action="reopen-project" data-id="${project.id}" title="Re-open"><i data-feather="rotate-ccw"></i></button>
+                        <button class="action-button" data-action="edit-project" data-id="${project.id}" title="Edit"><i data-feather="edit-2"></i></button>
+                        <button class="action-button delete" data-action="delete-project" data-id="${project.id}" title="Delete"><i data-feather="trash-2"></i></button>
                     </td>
                 `;
             } else {
@@ -160,9 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${new Date(project.dateCreated).toLocaleDateString()}</td>
                     <td>${new Date(project.dueDate).toLocaleDateString()}</td>
                     <td class="action-buttons">
-                        <button class="action-button complete" data-id="${project.id}" title="Complete"><i data-feather="check"></i></button>
-                        <button class="action-button" data-id="${project.id}" title="Edit"><i data-feather="edit-2"></i></button>
-                        <button class="action-button delete" data-id="${project.id}" title="Delete"><i data-feather="trash-2"></i></button>
+                        <button class="action-button complete" data-action="complete-project" data-id="${project.id}" title="Complete"><i data-feather="check"></i></button>
+                        <button class="action-button" data-action="edit-project" data-id="${project.id}" title="Edit"><i data-feather="edit-2"></i></button>
+                        <button class="action-button delete" data-action="delete-project" data-id="${project.id}" title="Delete"><i data-feather="trash-2"></i></button>
                     </td>
                 `;
             }
@@ -176,11 +176,18 @@ document.addEventListener('DOMContentLoaded', () => {
         allGroups.forEach(group => {
             const row = groupTableBody.insertRow();
             
-            row.insertCell(0).innerHTML = `<span class="group-name">${group.name}</span>`;
+            row.insertCell(0).innerHTML = `
+                <div class="action-buttons">
+                    <span class="group-name">${group.name}</span>
+                    <button class="action-button" data-action="edit-group" data-id="${group.id}" data-name="${group.name}" title="Edit Group Name"><i data-feather="edit-2"></i></button>
+                    <button class="action-button delete" data-action="delete-group" data-id="${group.id}" title="Delete Group"><i data-feather="trash-2"></i></button>
+                </div>
+            `;
 
             const subgroupsCell = row.insertCell(1);
             const addSubgroupBtn = document.createElement('button');
             addSubgroupBtn.className = 'add-subgroup-btn';
+            addSubgroupBtn.dataset.action = 'add-subgroup';
             addSubgroupBtn.dataset.groupId = group.id;
             addSubgroupBtn.innerHTML = '+ Add Subgroup';
             subgroupsCell.appendChild(addSubgroupBtn);
@@ -190,24 +197,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.className = 'subgroup-management-item';
                 item.innerHTML = `
                     <span>${subgroup.name}</span>
-                    <button class="action-button delete" data-type="subgroups" data-group-id="${group.id}" data-id="${subgroup.id}" title="Delete Subgroup"><i data-feather="trash-2"></i></button>
+                    <button class="action-button delete" data-action="delete-subgroup" data-group-id="${group.id}" data-id="${subgroup.id}" title="Delete Subgroup"><i data-feather="x"></i></button>
                 `;
                 subgroupsCell.appendChild(item);
             });
-
-            const actionsCell = row.insertCell(2);
-            actionsCell.className = 'actions-cell';
-            actionsCell.innerHTML = `
-                <div class="action-buttons">
-                    <button class="action-button" data-type="edit-group" data-id="${group.id}" data-name="${group.name}" title="Edit Group Name"><i data-feather="edit-2"></i></button>
-                    <button class="action-button delete" data-type="groups" data-id="${group.id}" title="Delete Group"><i data-feather="trash-2"></i></button>
-                </div>
-            `;
         });
 
         const nameList = document.getElementById('name-list');
         nameList.innerHTML = '';
-        allNames.forEach(n => nameList.innerHTML += `<li>${n.name}<button class="delete-btn action-button delete" data-type="names" data-id="${n.id}"><i data-feather="trash-2"></i></button></li>`);
+        allNames.forEach(n => nameList.innerHTML += `<li>${n.name}<button class="action-button delete" data-action="delete-name" data-id="${n.id}"><i data-feather="trash-2"></i></button></li>`);
         feather.replace();
     };
 
@@ -339,76 +337,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Main Click Handler ---
     document.addEventListener('click', async (e) => {
-        const button = e.target.closest('button');
+        const button = e.target.closest('button[data-action]');
         if (!button) return;
 
-        if (button.classList.contains('add-subgroup-btn')) {
-            const groupId = button.dataset.groupId;
-            const subGroupName = prompt('Enter name for the new subgroup:');
-            if (subGroupName && subGroupName.trim()) {
-                const result = await postData(`groups/${groupId}/subgroups`, { name: subGroupName.trim() });
-                if (result) {
-                    showToast('Subgroup added!');
-                    loadAllData();
+        const { action, id, groupId, name } = button.dataset;
+        let result, reload = true;
+
+        switch (action) {
+            case 'add-subgroup': {
+                const subGroupName = prompt('Enter name for the new subgroup:');
+                if (subGroupName && subGroupName.trim()) {
+                    result = await postData(`groups/${groupId}/subgroups`, { name: subGroupName.trim() });
+                    if (result) showToast('Subgroup added!');
                 }
-            }
-            return;
-        }
-
-        const { type, id, groupId, name } = button.dataset;
-
-        if (type === 'edit-group') {
-            const newName = prompt('Enter the new name for this group:', name);
-            if (newName && newName.trim() && newName.trim() !== name) {
-                const result = await updateData(`groups/${id}`, { name: newName.trim() });
-                if (result) {
-                    showToast('Group name updated!');
-                    loadAllData();
-                }
-            }
-            return;
-        }
-
-        if (button.classList.contains('delete-btn')) {
-            let endpoint = '';
-            if (type === 'groups') endpoint = `groups/${id}`;
-            else if (type === 'subgroups') endpoint = `groups/${groupId}/subgroups/${id}`;
-            else if (type === 'names') endpoint = `names/${id}`;
-
-            if (endpoint && confirm(`Are you sure you want to delete this item?`)) {
-                const result = await deleteData(endpoint);
-                if (result) {
-                    showToast('Item deleted!');
-                    loadAllData();
-                }
-            }
-            return;
-        }
-
-        const actionBtn = button.closest('.action-button');
-        if (actionBtn) {
-            const projectId = parseInt(actionBtn.dataset.id);
-            let reload = true;
-
-            if (actionBtn.title === 'Complete') {
-                const result = await updateData(`projects/${projectId}/complete`);
-                if (result) showToast('Project marked as complete!');
-            } else if (actionBtn.title === 'Edit') {
-                openEditModal(projectId);
                 reload = false;
-            } else if (actionBtn.title === 'Delete') {
-                if (confirm('Are you sure you want to delete this project?')) {
-                    const result = await deleteData(`projects/${projectId}`);
-                    if (result) showToast('Project deleted!');
-                } else {
-                    reload = false;
-                }
-            } else if (actionBtn.title === 'Re-open') {
-                const result = await updateData(`projects/${projectId}/reopen`);
-                if (result) showToast('Project has been re-opened!');
+                if (result) loadAllData();
+                break;
             }
-            
-            if (reload) loadAllData();
+            case 'edit-group': {
+                const newName = prompt('Enter the new name for this group:', name);
+                if (newName && newName.trim() && newName.trim() !== name) {
+                    result = await updateData(`groups/${id}`, { name: newName.trim() });
+                    if (result) showToast('Group name updated!');
+                }
+                reload = false;
+                if (result) loadAllData();
+                break;
+            }
+            case 'delete-group': {
+                 if (confirm('Are you sure you want to delete this group and all its subgroups?')) {
+                    result = await deleteData(`groups/${id}`);
+                    if (result) showToast('Group deleted!');
+                } else { reload = false; }
+                break;
+            }
+            case 'delete-subgroup': {
+                if (confirm('Are you sure you want to delete this subgroup?')) {
+                    result = await deleteData(`groups/${groupId}/subgroups/${id}`);
+                    if (result) showToast('Subgroup deleted!');
+                } else { reload = false; }
+                break;
+            }
+             case 'delete-name': {
+                if (confirm('Are you sure you want to delete this name?')) {
+                    result = await deleteData(`names/${id}`);
+                    if (result) showToast('Name deleted!');
+                } else { reload = false; }
+                break;
+            }
+            case 'complete-project':
+                result = await updateData(`projects/${id}/complete`);
+                if (result) showToast('Project marked as complete!');
+                break;
+            case 'edit-project':
+                openEditModal(parseInt(id));
+                reload = false;
+                break;
+            case 'delete-project':
+                if (confirm('Are you sure you want to delete this project?')) {
+                    result = await deleteData(`projects/${id}`);
+                    if (result) showToast('Project deleted!');
+                } else { reload = false; }
+                break;
+            case 'reopen-project':
+                result = await updateData(`projects/${id}/reopen`);
+                if (result) showToast('Project has been re-opened!');
+                break;
+        }
+
+        if (reload) {
+            loadAllData();
         }
     });
 
