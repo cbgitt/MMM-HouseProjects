@@ -47,7 +47,8 @@ Module.register("MMM-HouseProjects", {
 		table.className = "small";
 
 		const tableHeader = table.insertRow();
-		const headers = ["Description", "Group", "Assigned To", "Due Date", "Days Left", "Done"];
+		// Updated the header labels as requested
+		const headers = ["Project", "Group", "Person", "Due Date", "Days Left", "Done"];
 		headers.forEach(h => {
 			const th = document.createElement("th");
 			th.innerHTML = h;
