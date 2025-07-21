@@ -171,31 +171,38 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderManageLists = () => {
-        const groupList = document.getElementById('group-list');
-        groupList.innerHTML = '';
+        const groupTableBody = document.getElementById('group-list-body');
+        groupTableBody.innerHTML = '';
         allGroups.forEach(group => {
-            const groupLi = document.createElement('li');
-            groupLi.className = 'group-item';
-            groupLi.innerHTML = `
-                <span>${group.name}</span>
-                <div>
+            const row = groupTableBody.insertRow();
+            
+            row.insertCell(0).innerHTML = `<span class="group-name">${group.name}</span>`;
+
+            const subgroupsCell = row.insertCell(1);
+            const addSubgroupBtn = document.createElement('button');
+            addSubgroupBtn.className = 'add-subgroup-btn';
+            addSubgroupBtn.dataset.groupId = group.id;
+            addSubgroupBtn.innerHTML = '+ Add Subgroup';
+            subgroupsCell.appendChild(addSubgroupBtn);
+            
+            (group.subgroups || []).forEach(subgroup => {
+                const item = document.createElement('div');
+                item.className = 'subgroup-management-item';
+                item.innerHTML = `
+                    <span>${subgroup.name}</span>
+                    <button class="action-button delete" data-type="subgroups" data-group-id="${group.id}" data-id="${subgroup.id}" title="Delete Subgroup"><i data-feather="trash-2"></i></button>
+                `;
+                subgroupsCell.appendChild(item);
+            });
+
+            const actionsCell = row.insertCell(2);
+            actionsCell.className = 'actions-cell';
+            actionsCell.innerHTML = `
+                <div class="action-buttons">
                     <button class="action-button" data-type="edit-group" data-id="${group.id}" data-name="${group.name}" title="Edit Group Name"><i data-feather="edit-2"></i></button>
-                    <button class="add-subgroup-btn" data-group-id="${group.id}">+ Subgroup</button>
-                    <button class="delete-btn action-button delete" data-type="groups" data-id="${group.id}" title="Delete Group"><i data-feather="trash-2"></i></button>
+                    <button class="action-button delete" data-type="groups" data-id="${group.id}" title="Delete Group"><i data-feather="trash-2"></i></button>
                 </div>
             `;
-            const subgroupUl = document.createElement('ul');
-            subgroupUl.className = 'subgroup-list';
-            (group.subgroups || []).forEach(subgroup => {
-                subgroupUl.innerHTML += `
-                    <li class="subgroup-item">
-                        <span>${subgroup.name}</span>
-                        <button class="delete-btn action-button delete" data-type="subgroups" data-group-id="${group.id}" data-id="${subgroup.id}" title="Delete Subgroup"><i data-feather="trash-2"></i></button>
-                    </li>
-                `;
-            });
-            groupLi.appendChild(subgroupUl);
-            groupList.appendChild(groupLi);
         });
 
         const nameList = document.getElementById('name-list');

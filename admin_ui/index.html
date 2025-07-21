@@ -101,7 +101,16 @@
                              <input type="text" id="newGroupName" placeholder="Enter new group name">
                              <button onclick="addGroup()"><i data-feather="plus"></i> Add Group</button>
                         </div>
-                        <ul id="group-list" class="item-list"></ul>
+                        <table id="group-management-table" class="management-table">
+                            <thead>
+                                <tr>
+                                    <th>Group</th>
+                                    <th>Subgroups</th>
+                                    <th class="actions-cell">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="group-list-body"></tbody>
+                        </table>
                     </div>
                     <div class="card">
                         <h3>Manage Names</h3>
