@@ -89,16 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const renderGroupChart = () => {
         const ctx = document.getElementById('projectsByGroupChart').getContext('2d');
-        const groupCounts = allGroups.map(group => allProjects.filter(p => p.group === group.name && !p.completed).length);
+        const labels = allGroups.map(g => g.name);
+        const data = allGroups.map(group => allProjects.filter(p => p.group === group.name && !p.completed).length);
 
         if (projectsChart) projectsChart.destroy();
         
         projectsChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: allGroups.map(g => g.name),
+                labels: labels,
                 datasets: [{
-                    data: groupCounts,
+                    data: data,
                     backgroundColor: ['#4a90e2', '#50e3c2', '#f5a623', '#bd10e0', '#7ed321', '#9013fe'],
                     borderWidth: 0
                 }]
@@ -119,31 +120,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         allProjects.forEach(project => {
             const assignedName = allNames.find(n => n.id === project.nameId)?.name || 'N/A';
+            const groupDisplay = project.subgroup ? `${project.group} / ${project.subgroup}` : project.group;
+
             if (project.completed) {
                 const row = completedBody.insertRow();
                 const createdDate = new Date(project.dateCreated);
                 const completedDate = new Date(project.completedDate);
                 const dueDate = new Date(project.dueDate);
 
-                // Calculate days to complete
                 const timeDiff = completedDate.getTime() - createdDate.getTime();
                 const daysToComplete = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-                // Determine color class based on due date
                 let colorClass = '';
-                // Reset hours to compare dates only
                 const completedDay = new Date(completedDate).setHours(0,0,0,0);
                 const dueDay = new Date(dueDate).setHours(0,0,0,0);
 
-                if (completedDay < dueDay) {
-                    colorClass = 'text-green';
-                } else if (completedDay > dueDay) {
-                    colorClass = 'text-red';
-                }
+                if (completedDay < dueDay) colorClass = 'text-green';
+                else if (completedDay > dueDay) colorClass = 'text-red';
 
                 row.innerHTML = `
                     <td>${project.description}</td>
-                    <td>${project.group}</td>
+                    <td>${groupDisplay}</td>
                     <td>${assignedName}</td>
                     <td>${createdDate.toLocaleDateString()}</td>
                     <td>${completedDate.toLocaleString()}</td>
@@ -158,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = activeBody.insertRow();
                 row.innerHTML = `
                     <td>${project.description}</td>
-                    <td>${project.group}</td>
+                    <td>${groupDisplay}</td>
                     <td>${assignedName}</td>
                     <td>${new Date(project.dateCreated).toLocaleDateString()}</td>
                     <td>${new Date(project.dueDate).toLocaleDateString()}</td>
@@ -175,10 +172,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderManageLists = () => {
         const groupList = document.getElementById('group-list');
-        const nameList = document.getElementById('name-list');
         groupList.innerHTML = '';
+        allGroups.forEach(group => {
+            const groupLi = document.createElement('li');
+            groupLi.className = 'group-item';
+            groupLi.innerHTML = `
+                <span>${group.name}</span>
+                <div>
+                    <button class="add-subgroup-btn" data-group-id="${group.id}">+ Subgroup</button>
+                    <button class="delete-btn" data-type="groups" data-id="${group.id}"><i data-feather="x-circle"></i></button>
+                </div>
+            `;
+            const subgroupUl = document.createElement('ul');
+            subgroupUl.className = 'subgroup-list';
+            (group.subgroups || []).forEach(subgroup => {
+                subgroupUl.innerHTML += `
+                    <li class="subgroup-item">
+                        <span>${subgroup.name}</span>
+                        <button class="delete-btn" data-type="subgroups" data-group-id="${group.id}" data-id="${subgroup.id}"><i data-feather="x-circle"></i></button>
+                    </li>
+                `;
+            });
+            groupLi.appendChild(subgroupUl);
+            groupList.appendChild(groupLi);
+        });
+
+        const nameList = document.getElementById('name-list');
         nameList.innerHTML = '';
-        allGroups.forEach(g => groupList.innerHTML += `<li>${g.name}<button class="delete-btn" data-type="groups" data-id="${g.id}"><i data-feather="x-circle"></i></button></li>`);
         allNames.forEach(n => nameList.innerHTML += `<li>${n.name}<button class="delete-btn" data-type="names" data-id="${n.id}"><i data-feather="x-circle"></i></button></li>`);
         feather.replace();
     };
@@ -188,7 +208,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameSelect = document.getElementById(`${elementPrefix}name-select`);
         groupSelect.innerHTML = '<option value="">Select Group</option>';
         nameSelect.innerHTML = '<option value="">Select Name</option>';
-        groups.forEach(g => groupSelect.innerHTML += `<option value="${g.name}">${g.name}</option>`);
+        
+        groups.forEach(group => {
+            if (!group.subgroups || group.subgroups.length === 0) {
+                const option = document.createElement('option');
+                option.value = group.name;
+                option.textContent = group.name;
+                groupSelect.appendChild(option);
+            } else {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = group.name;
+                 group.subgroups.forEach(subgroup => {
+                    const option = document.createElement('option');
+                    option.value = `${group.name}:${subgroup.name}`;
+                    option.textContent = subgroup.name;
+                    optgroup.appendChild(option);
+                });
+                groupSelect.appendChild(optgroup);
+            }
+        });
+
         names.forEach(n => nameSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`);
     };
 
@@ -243,7 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-dueDate').value = project.dueDate.split('T')[0];
         
         populateDropdowns(allGroups, allNames, 'edit-');
-        document.getElementById('edit-group-select').value = project.group;
+        const groupValue = project.subgroup ? `${project.group}:${project.subgroup}` : project.group;
+        document.getElementById('edit-group-select').value = groupValue;
         document.getElementById('edit-name-select').value = project.nameId;
         
         document.getElementById('edit-modal').style.display = 'flex';
@@ -279,11 +319,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = e.target.closest('button');
         if (!button) return;
 
-        const manageDeleteBtn = button.closest('.delete-btn');
-        if (manageDeleteBtn) {
-            const { type, id } = manageDeleteBtn.dataset;
+        if (button.classList.contains('add-subgroup-btn')) {
+            const groupId = button.dataset.groupId;
+            const subGroupName = prompt('Enter name for the new subgroup:');
+            if (subGroupName && subGroupName.trim()) {
+                const result = await postData(`groups/${groupId}/subgroups`, { name: subGroupName.trim() });
+                if (result) {
+                    showToast('Subgroup added!');
+                    loadAllData();
+                }
+            }
+            return;
+        }
+
+        if (button.classList.contains('delete-btn')) {
+            const { type, id, groupId } = button.dataset;
+            let endpoint = type === 'subgroups' ? `groups/${groupId}/subgroups/${id}` : `groups/${id}`;
+            if (type === 'names') endpoint = `names/${id}`;
+
             if (confirm(`Are you sure you want to delete this item?`)) {
-                const result = await deleteData(`${type}/${id}`);
+                const result = await deleteData(endpoint);
                 if (result) {
                     showToast('Item deleted!');
                     loadAllData();

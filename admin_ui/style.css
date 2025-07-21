@@ -264,6 +264,21 @@ button .feather {
 .delete-btn:hover {
     color: var(--danger-color);
 }
+.group-item {
+    font-weight: bold;
+}
+.subgroup-list {
+    list-style: none;
+    padding-left: 20px;
+}
+.subgroup-item {
+    font-weight: normal;
+}
+.add-subgroup-btn {
+    margin-left: 10px;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+}
 
 /* Modal */
 .modal-overlay {
