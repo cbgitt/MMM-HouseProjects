@@ -303,11 +303,26 @@ document.addEventListener('DOMContentLoaded', () => {
         allNames.forEach(n => nameSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`);
         nameSelect.value = project.nameId;
         
+        const reopenBtn = document.getElementById('reopen-btn');
+        reopenBtn.style.display = project.completed ? 'flex' : 'none';
+
         document.getElementById('edit-modal').style.display = 'flex';
     };
 
     window.closeEditModal = () => {
         document.getElementById('edit-modal').style.display = 'none';
+    };
+    
+    window.reopenProjectFromModal = async () => {
+        const projectId = parseInt(document.getElementById('edit-project-id').value);
+        if (!projectId) return;
+
+        const result = await updateData(`projects/${projectId}/reopen`);
+        if (result) {
+            showToast('Project has been re-opened!');
+            closeEditModal();
+            loadAllData();
+        }
     };
 
     window.saveProjectChanges = async () => {

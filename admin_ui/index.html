@@ -10,6 +10,7 @@
 </head>
 <body>
     <div class="container">
+        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i data-feather="database"></i>
@@ -24,7 +25,9 @@
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
+            <!-- Home Page -->
             <div id="home" class="page active">
                 <h2>Dashboard</h2>
                 <div class="kpi-widgets">
@@ -56,6 +59,7 @@
                 </div>
             </div>
 
+            <!-- Projects Page -->
             <div id="projects" class="page">
                 <h2>All Projects</h2>
                 <div class="card">
@@ -87,6 +91,7 @@
                 </div>
             </div>
 
+            <!-- Manage Data Page -->
             <div id="manage" class="page">
                 <h2>Manage Data</h2>
                 <div class="manage-container">
@@ -119,6 +124,7 @@
         </main>
     </div>
 
+    <!-- Edit Project Modal -->
     <div id="edit-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content card">
             <h3>Edit Project</h3>
@@ -131,6 +137,7 @@
                 <input type="date" id="edit-dueDate">
             </div>
             <div class="modal-actions">
+                <button id="reopen-btn" class="warning" onclick="reopenProjectFromModal()" style="display: none;">Re-open Project</button>
                 <button class="secondary" onclick="closeEditModal()">Cancel</button>
                 <button onclick="saveProjectChanges()">Save Changes</button>
             </div>

@@ -3,6 +3,7 @@
     --secondary-color: #50e3c2;
     --danger-color: #e74c3c;
     --success-color: #2ecc71;
+    --warning-color: #f39c12;
     --bg-color: #f4f7fa;
     --sidebar-bg: #ffffff;
     --card-bg: #ffffff;
@@ -132,7 +133,7 @@ h3 {
 }
 .chart-container {
     height: 350px;
-    position: relative; /* This is the fix */
+    position: relative;
 }
 
 /* Forms */
@@ -321,6 +322,12 @@ button.secondary {
 }
 button.secondary:hover {
     background-color: #95a5a6;
+}
+button.warning {
+    background-color: var(--warning-color);
+}
+button.warning:hover {
+    background-color: #d35400;
 }
 
 /* Toast Notifications */
