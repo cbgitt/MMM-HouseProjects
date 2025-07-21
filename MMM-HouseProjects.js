@@ -2,6 +2,8 @@
 
 Module.register("MMM-HouseProjects", {
 	defaults: {
+		// updateInterval is no longer used for polling but can be kept for legacy purposes.
+		// The module now updates based on push notifications from the helper.
 		updateInterval: 60000,
 		fadeSpeed: 2000,
 		title: "House Projects"
@@ -23,8 +25,8 @@ Module.register("MMM-HouseProjects", {
 		this.projects = [];
 		this.names = [];
 		this.loaded = false;
-		this.getProjects(); // Initial data load
-		this.scheduleUpdate(); // Schedule subsequent updates
+		// Request initial data from the helper upon startup
+		this.getProjects();
 	},
 
 	// Override dom generator.
@@ -68,11 +70,10 @@ Module.register("MMM-HouseProjects", {
                 const dueDate = moment(project.dueDate);
                 const daysRemaining = dueDate.diff(moment(), "days");
                 
-                // This is the updated part for displaying the group and subgroup
                 const groupDisplay = project.subgroup ? `${project.group}:${project.subgroup}` : project.group;
 
                 row.insertCell().innerHTML = project.description;
-                row.insertCell().innerHTML = groupDisplay; // Updated line
+                row.insertCell().innerHTML = groupDisplay;
                 row.insertCell().innerHTML = assignedName;
                 row.insertCell().innerHTML = dueDate.format("MMM Do");
                 row.insertCell().innerHTML = daysRemaining;
@@ -92,17 +93,12 @@ Module.register("MMM-HouseProjects", {
 		return wrapper;
 	},
 
-	scheduleUpdate: function () {
-		setInterval(() => {
-			this.getProjects();
-		}, this.config.updateInterval);
-	},
-
+	// Function to request data from the node_helper
 	getProjects: function () {
 		this.sendSocketNotification("GET_PROJECTS");
 	},
 
-	// This now listens for the correct notification name from the helper
+	// This function is called only when the node_helper sends an update
 	socketNotificationReceived: function (notification, payload) {
 		if (notification === "PROJECTS_UPDATED") {
 			this.projects = payload.projects;
