@@ -35,6 +35,7 @@ module.exports = NodeHelper.create({
 		// Groups & Subgroups
 		this.expressApp.get(`${api}/groups`, (req, res) => this.readJsonFile(this.groupsFilePath, res));
 		this.expressApp.post(`${api}/groups`, (req, res) => this.addGroup(req, res));
+		this.expressApp.put(`${api}/groups/:id`, (req, res) => this.updateGroup(req, res)); // New Endpoint
 		this.expressApp.delete(`${api}/groups/:id`, (req, res) => this.deleteItem(this.groupsFilePath, req.params.id, res, "Group"));
 		this.expressApp.post(`${api}/groups/:id/subgroups`, (req, res) => this.addSubgroup(req, res));
 		this.expressApp.delete(`${api}/groups/:groupId/subgroups/:subgroupId`, (req, res) => this.deleteSubgroup(req, res));
@@ -123,6 +124,38 @@ module.exports = NodeHelper.create({
 			const newGroup = { id: Date.now(), name: req.body.name, subgroups: [] };
 			groups.push(newGroup);
 			this.writeJsonFile(this.groupsFilePath, groups, () => res.status(201).json(newGroup));
+		});
+	},
+
+	updateGroup: function(req, res) {
+		const groupId = parseInt(req.params.id);
+		const newName = req.body.name;
+	
+		fs.readFile(this.groupsFilePath, 'utf8', (err, data) => {
+			if (err) return res.status(500).json({ error: "Failed to read groups file." });
+			let groups = JSON.parse(data);
+			const groupIndex = groups.findIndex(g => g.id === groupId);
+			if (groupIndex === -1) return res.status(404).json({ error: "Group not found." });
+	
+			const oldName = groups[groupIndex].name;
+			groups[groupIndex].name = newName;
+	
+			this.writeJsonFile(this.groupsFilePath, groups, () => {
+				// Now update projects file
+				fs.readFile(this.projectFilePath, 'utf8', (projErr, projData) => {
+					if (projErr) return res.status(500).json({ error: "Failed to read projects file while updating group name." });
+					let projects = JSON.parse(projData);
+					projects.forEach(p => {
+						if (p.group === oldName) {
+							p.group = newName;
+						}
+					});
+					this.writeJsonFile(this.projectFilePath, projects, () => {
+						this.socketNotificationReceived("GET_PROJECTS");
+						res.status(200).json(groups[groupIndex]);
+					});
+				});
+			});
 		});
 	},
 

@@ -179,8 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
             groupLi.innerHTML = `
                 <span>${group.name}</span>
                 <div>
+                    <button class="action-button" data-type="edit-group" data-id="${group.id}" data-name="${group.name}" title="Edit Group Name"><i data-feather="edit-2"></i></button>
                     <button class="add-subgroup-btn" data-group-id="${group.id}">+ Subgroup</button>
-                    <button class="delete-btn" data-type="groups" data-id="${group.id}"><i data-feather="x-circle"></i></button>
+                    <button class="delete-btn action-button delete" data-type="groups" data-id="${group.id}" title="Delete Group"><i data-feather="trash-2"></i></button>
                 </div>
             `;
             const subgroupUl = document.createElement('ul');
@@ -189,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 subgroupUl.innerHTML += `
                     <li class="subgroup-item">
                         <span>${subgroup.name}</span>
-                        <button class="delete-btn" data-type="subgroups" data-group-id="${group.id}" data-id="${subgroup.id}"><i data-feather="x-circle"></i></button>
+                        <button class="delete-btn action-button delete" data-type="subgroups" data-group-id="${group.id}" data-id="${subgroup.id}" title="Delete Subgroup"><i data-feather="trash-2"></i></button>
                     </li>
                 `;
             });
@@ -199,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const nameList = document.getElementById('name-list');
         nameList.innerHTML = '';
-        allNames.forEach(n => nameList.innerHTML += `<li>${n.name}<button class="delete-btn" data-type="names" data-id="${n.id}"><i data-feather="x-circle"></i></button></li>`);
+        allNames.forEach(n => nameList.innerHTML += `<li>${n.name}<button class="delete-btn action-button delete" data-type="names" data-id="${n.id}"><i data-feather="trash-2"></i></button></li>`);
         feather.replace();
     };
 
@@ -347,16 +348,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (button.classList.contains('delete-btn')) {
-            const { type, id, groupId } = button.dataset;
-            let endpoint = '';
-            if (type === 'groups') {
-                endpoint = `groups/${id}`;
-            } else if (type === 'subgroups') {
-                endpoint = `groups/${groupId}/subgroups/${id}`;
-            } else if (type === 'names') {
-                endpoint = `names/${id}`;
+        const { type, id, groupId, name } = button.dataset;
+
+        if (type === 'edit-group') {
+            const newName = prompt('Enter the new name for this group:', name);
+            if (newName && newName.trim() && newName.trim() !== name) {
+                const result = await updateData(`groups/${id}`, { name: newName.trim() });
+                if (result) {
+                    showToast('Group name updated!');
+                    loadAllData();
+                }
             }
+            return;
+        }
+
+        if (button.classList.contains('delete-btn')) {
+            let endpoint = '';
+            if (type === 'groups') endpoint = `groups/${id}`;
+            else if (type === 'subgroups') endpoint = `groups/${groupId}/subgroups/${id}`;
+            else if (type === 'names') endpoint = `names/${id}`;
 
             if (endpoint && confirm(`Are you sure you want to delete this item?`)) {
                 const result = await deleteData(endpoint);
@@ -370,24 +380,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const actionBtn = button.closest('.action-button');
         if (actionBtn) {
-            const id = parseInt(actionBtn.dataset.id);
+            const projectId = parseInt(actionBtn.dataset.id);
             let reload = true;
 
             if (actionBtn.title === 'Complete') {
-                const result = await updateData(`projects/${id}/complete`);
+                const result = await updateData(`projects/${projectId}/complete`);
                 if (result) showToast('Project marked as complete!');
             } else if (actionBtn.title === 'Edit') {
-                openEditModal(id);
+                openEditModal(projectId);
                 reload = false;
             } else if (actionBtn.title === 'Delete') {
                 if (confirm('Are you sure you want to delete this project?')) {
-                    const result = await deleteData(`projects/${id}`);
+                    const result = await deleteData(`projects/${projectId}`);
                     if (result) showToast('Project deleted!');
                 } else {
                     reload = false;
                 }
             } else if (actionBtn.title === 'Re-open') {
-                const result = await updateData(`projects/${id}/reopen`);
+                const result = await updateData(`projects/${projectId}/reopen`);
                 if (result) showToast('Project has been re-opened!');
             }
             
