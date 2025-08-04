@@ -1,24 +1,746 @@
+/* Complete Enhanced MMM-HouseProjects.css */
+
 .MMM-HouseProjects {
     width: 100%;
+    font-family: "Roboto", sans-serif;
 }
 
-.MMM-HouseProjects table {
+/* Header Styles */
+.projects-header {
+    margin-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.projects-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: 300;
+}
+
+.projects-title i {
+    margin-right: 8px;
+    color: #4a90e2;
+}
+
+.projects-stats {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.stat-item.active {
+    background-color: rgba(74, 144, 226, 0.3);
+    color: #4a90e2;
+}
+
+.stat-item.completed {
+    background-color: rgba(46, 213, 115, 0.3);
+    color: #2ed573;
+}
+
+.stat-item.overdue {
+    background-color: rgba(255, 71, 87, 0.3);
+    color: #ff4757;
+    animation: pulse-red 2s infinite;
+}
+
+/* Table Styles */
+.projects-table {
     width: 100%;
     border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
-/* Rule for data cells (with border) */
-.MMM-HouseProjects td {
-    border: 1px solid #666;
-    padding: 8px;
+.table-header th {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 10px 12px;
     text-align: left;
-}
-
-/* Rule for header cells (no border, smaller text) */
-.MMM-HouseProjects th {
-    background-color: transparent;
+    font-size: 0.9em;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     border: none;
-    font-size: 75%; /* This will decrease text size by 50% */
+}
+
+/* Priority Section Headers */
+.priority-section td {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 12px;
+    border: none;
+}
+
+.priority-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.priority-count {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 400;
+}
+
+/* Project Rows */
+.project-row {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideInFromTop 0.3s ease-out;
+}
+
+.project-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.project-row:focus-within {
+    outline: 2px solid #4a90e2;
+    outline-offset: 2px;
+}
+
+.project-row td {
+    padding: 12px;
+    vertical-align: top;
+    color: #fff;
+    border: none;
+}
+
+/* Urgency-based styling */
+.project-row.urgency-overdue {
+    background: rgba(255, 71, 87, 0.1);
+    animation: pulse-red 2s infinite;
+}
+
+.project-row.urgency-today {
+    background: rgba(255, 107, 0, 0.1);
+}
+
+.project-row.urgency-urgent {
+    background: rgba(255, 165, 2, 0.1);
+}
+
+.project-row.urgency-soon {
+    background: rgba(241, 196, 15, 0.1);
+}
+
+.project-row.urgency-normal {
+    background: rgba(46, 213, 115, 0.05);
+}
+
+/* Animations */
+@keyframes pulse-red {
+    0%, 100% { background: rgba(255, 71, 87, 0.1); }
+    50% { background: rgba(255, 71, 87, 0.2); }
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Project Content */
+.project-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.project-icon {
+    font-size: 1.2em;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.project-text {
+    flex-grow: 1;
+    font-size: 1em;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.priority-badge {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-size: 0.7em;
+    font-weight: 700;
+    color: #fff;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.priority-badge.priority-high {
+    background-color: #ff4757;
+}
+
+.priority-badge.priority-medium {
+    background-color: #ffa502;
+}
+
+.priority-badge.priority-low {
+    background-color: #2ed573;
+}
+
+.priority-badge::after {
+    content: attr(data-priority);
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    z-index: 100;
+}
+
+.priority-badge:hover::after {
+    opacity: 1;
+}
+
+/* Progress Bar */
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4a90e2, #50e3c2);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Assigned Person */
+.assigned-person {
+    text-align: center;
+    min-width: 100px;
+}
+
+.person-name {
+    font-size: 0.95em;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.group-name {
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+/* Due Date */
+.due-date {
+    text-align: center;
+    font-size: 0.9em;
+    min-width: 80px;
+}
+
+.due-today {
+    color: #ff6b00;
+    font-weight: 600;
+    animation: pulse-orange 1.5s infinite;
+}
+
+.due-tomorrow {
+    color: #ffa502;
+    font-weight: 500;
+}
+
+.due-this-week {
+    color: #f1c40f;
+}
+
+.due-normal {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.due-overdue {
+    color: #ff4757;
+    font-weight: 600;
+}
+
+@keyframes pulse-orange {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Status Indicator */
+.project-status {
+    text-align: center;
+    min-width: 100px;
+}
+
+.status-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.status-text {
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.days-info {
+    font-size: 0.75em;
+    opacity: 0.8;
+}
+
+.status-indicator.overdue .status-text {
+    color: #ff4757;
+}
+
+.status-indicator.today .status-text {
+    color: #ff6b00;
+}
+
+.status-indicator.urgent .status-text {
+    color: #ffa502;
+}
+
+.status-indicator.soon .status-text {
+    color: #f1c40f;
+}
+
+.status-indicator.normal .status-text {
+    color: #2ed573;
+}
+
+/* Project Actions */
+.project-actions {
+    text-align: center;
+    width: 50px;
+}
+
+.project-actions input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #2ed573;
+    transform: scale(1.2);
+}
+
+.project-actions input[type="checkbox"]:hover {
+    transform: scale(1.3);
+}
+
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 30px 20px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(74, 144, 226, 0.3);
+    border-top: 3px solid #4a90e2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* No Projects State */
+.no-projects {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.no-projects-content {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.celebration-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.no-projects-content h3 {
+    font-size: 1.5em;
+    font-weight: 300;
+    margin: 0 0 10px 0;
+    color: #fff;
+}
+
+.no-projects-content p {
+    font-size: 1em;
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* Compact mode (for smaller displays) */
+.MMM-HouseProjects.compact .project-row td {
     padding: 8px;
-    text-align: left;
+    font-size: 0.9em;
+}
+
+.MMM-HouseProjects.compact .project-icon {
+    font-size: 1em;
+}
+
+.MMM-HouseProjects.compact .progress-bar {
+    height: 3px;
+}
+
+.MMM-HouseProjects.compact .projects-title {
+    font-size: 1.1em;
+}
+
+.MMM-HouseProjects.compact .stat-item {
+    font-size: 0.75em;
+    padding: 3px 6px;
+}
+
+.MMM-HouseProjects.compact .priority-header {
+    font-size: 0.8em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 800px) {
+    .projects-table {
+        font-size: 0.9em;
+    }
+    
+    .project-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .projects-stats {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .projects-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .project-row td {
+        padding: 8px 6px;
+    }
+    
+    .assigned-person,
+    .due-date,
+    .project-status {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .projects-stats {
+        display: none;
+    }
+    
+    .project-content {
+        font-size: 0.9em;
+    }
+    
+    .priority-header {
+        font-size: 0.8em;
+    }
+    
+    .projects-table {
+        font-size: 0.8em;
+    }
+    
+    .project-row td {
+        padding: 6px 4px;
+    }
+}
+
+@media (max-width: 400px) {
+    .MMM-HouseProjects {
+        font-size: 0.9em;
+    }
+    
+    .projects-title {
+        font-size: 1em;
+    }
+    
+    .project-icon {
+        font-size: 1em;
+        width: 16px;
+    }
+    
+    .priority-badge {
+        width: 16px;
+        height: 16px;
+        line-height: 16px;
+        font-size: 0.6em;
+    }
+    
+    .progress-bar {
+        height: 3px;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .projects-table {
+        background: rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .project-row {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .priority-badge {
+        border: 2px solid #fff;
+    }
+    
+    .progress-bar {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .stat-item {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .project-row,
+    .loading-spinner,
+    .celebration-icon,
+    .due-today,
+    .stat-item.overdue,
+    .project-row.urgency-overdue {
+        animation: none;
+    }
+    
+    .progress-fill,
+    .project-row,
+    .priority-badge::after,
+    .project-actions input[type="checkbox"] {
+        transition: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .MMM-HouseProjects {
+        color: #000;
+        background: #fff;
+    }
+    
+    .projects-table {
+        background: #fff;
+        border: 1px solid #000;
+    }
+    
+    .project-row td,
+    .table-header th {
+        color: #000;
+        border: 1px solid #ccc;
+    }
+    
+    .priority-section td {
+        background: #f0f0f0;
+    }
+    
+    .stat-item.overdue,
+    .project-row.urgency-overdue {
+        animation: none;
+        background: #ffebee;
+    }
+    
+    .projects-stats {
+        display: none;
+    }
+}
+
+/* Dark theme enhancements (for modules that support theme switching) */
+@media (prefers-color-scheme: dark) {
+    .MMM-HouseProjects {
+        /* Already optimized for dark backgrounds in MagicMirror */
+    }
+}
+
+/* Focus management for accessibility */
+.project-actions input[type="checkbox"]:focus {
+    outline: 2px solid #4a90e2;
+    outline-offset: 2px;
+}
+
+.priority-badge:focus {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* Custom scrollbar for overflow areas */
+.MMM-HouseProjects *::-webkit-scrollbar {
+    width: 6px;
+}
+
+.MMM-HouseProjects *::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.MMM-HouseProjects *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.MMM-HouseProjects *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Utility classes for dynamic styling */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Status-based row highlighting */
+.project-row.status-critical {
+    border-left: 4px solid #ff4757;
+    background: rgba(255, 71, 87, 0.1);
+}
+
+.project-row.status-warning {
+    border-left: 4px solid #ffa502;
+    background: rgba(255, 165, 2, 0.1);
+}
+
+.project-row.status-success {
+    border-left: 4px solid #2ed573;
+    background: rgba(46, 213, 115, 0.1);
+}
+
+.project-row.status-info {
+    border-left: 4px solid #4a90e2;
+    background: rgba(74, 144, 226, 0.1);
+}
+
+/* Enhanced progress bar styles */
+.progress-bar.progress-critical .progress-fill {
+    background: linear-gradient(90deg, #ff4757, #c0392b);
+}
+
+.progress-bar.progress-warning .progress-fill {
+    background: linear-gradient(90deg, #ffa502, #e67e22);
+}
+
+.progress-bar.progress-success .progress-fill {
+    background: linear-gradient(90deg, #2ed573, #27ae60);
+}
+
+/* Weather-dependent project indicators */
+.project-row.weather-dependent::before {
+    content: "🌤️";
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* Season-based styling */
+.project-row.season-spring {
+    border-left-color: #2ed573;
+}
+
+.project-row.season-summer {
+    border-left-color: #f39c12;
+}
+
+.project-row.season-fall {
+    border-left-color: #e67e22;
+}
+
+.project-row.season-winter {
+    border-left-color: #3498db;
 }

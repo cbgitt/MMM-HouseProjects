@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "id": 1753113361493,
+    "dateCreated": "2025-07-21T15:56:01.493Z",
+    "description": "Drain water heater",
+    "group": "House",
+    "subgroup": "Basement",
+    "nameId": 1753030592511,
+    "dueDate": "2025-08-01",
+    "completed": false,
+    "completedDate": null,
+    "progressPercent": 0,
+    "notes": [
+      {
+        "id": 1754314716536,
+        "text": "This is a test note.",
+        "author": "Admin",
+        "timestamp": "2025-08-04T13:38:36.536Z"
+      }
+    ]
+  },
+  {
+    "id": 1754310592317,
+    "dateCreated": "2025-08-04T12:29:52.317Z",
+    "description": "Change Air Filter",
+    "group": "House",
+    "subgroup": "HVAC",
+    "nameId": 1753030592511,
+    "dueDate": "2025-08-10",
+    "completed": false,
+    "completedDate": null
+  },
+  {
+    "id": 1754314446522,
+    "dateCreated": "2025-08-04T13:34:06.522Z",
+    "description": "Change Water Filter",
+    "group": "House",
+    "subgroup": "Kitchen",
+    "nameId": 1753030592511,
+    "dueDate": "2025-08-10",
+    "priority": "low",
+    "estimatedHours": 1,
+    "actualHours": null,
+    "budget": null,
+    "cost": null,
+    "progressPercent": 0,
+    "completed": false,
+    "completedDate": null,
+    "notes": [],
+    "tags": [],
+    "weatherDependent": false,
+    "season": "any"
+  }
+]

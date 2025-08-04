@@ -1,0 +1,24 @@
+.MMM-HouseProjects {
+    width: 100%;
+}
+
+.MMM-HouseProjects table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Rule for data cells (with border) */
+.MMM-HouseProjects td {
+    border: 1px solid #666;
+    padding: 8px;
+    text-align: left;
+}
+
+/* Rule for header cells (no border, smaller text) */
+.MMM-HouseProjects th {
+    background-color: transparent;
+    border: none;
+    font-size: 75%; /* This will decrease text size by 50% */
+    padding: 8px;
+    text-align: left;
+}

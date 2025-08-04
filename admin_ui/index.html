@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projects Dashboard</title>
+    <title>House Projects Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
@@ -14,80 +14,207 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i data-feather="database"></i>
-                <h1>Admin Panel</h1>
+                <h1>House Projects</h1>
             </div>
             <nav>
                 <ul>
-                    <li class="active" onclick="showPage('home')"><i data-feather="home"></i><span>Dashboard</span></li>
-                    <li onclick="showPage('projects')"><i data-feather="list"></i><span>Projects</span></li>
-                    <li onclick="showPage('manage')"><i data-feather="settings"></i><span>Manage Data</span></li>
+                    <li class="active" onclick="showPage('dashboard')">
+                        <i data-feather="home"></i><span>Dashboard</span>
+                    </li>
+                    <li onclick="showPage('projects')">
+                        <i data-feather="list"></i><span>Projects</span>
+                    </li>
+                    <li onclick="showPage('analytics')">
+                        <i data-feather="bar-chart-2"></i><span>Analytics</span>
+                    </li>
+                    <li onclick="showPage('manage')">
+                        <i data-feather="settings"></i><span>Manage Data</span>
+                    </li>
                 </ul>
             </nav>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Home Page -->
-            <div id="home" class="page active">
-                <h2>Dashboard</h2>
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <h2>Dashboard Overview</h2>
                 <div class="kpi-widgets">
                     <div class="widget">
-                        <i data-feather="target" class="widget-icon"></i>
+                        <i data-feather="target" class="widget-icon" style="color: #4a90e2;"></i>
                         <div class="widget-text">
                             <div class="widget-value" id="activeProjects">0</div>
                             <div class="widget-title">Active Projects</div>
                         </div>
                     </div>
                     <div class="widget">
-                        <i data-feather="check-square" class="widget-icon"></i>
+                        <i data-feather="check-square" class="widget-icon" style="color: #2ecc71;"></i>
                         <div class="widget-text">
                             <div class="widget-value" id="completedProjects">0</div>
                             <div class="widget-title">Completed This Month</div>
                         </div>
                     </div>
                     <div class="widget">
-                        <i data-feather="users" class="widget-icon"></i>
+                        <i data-feather="alert-triangle" class="widget-icon" style="color: #e74c3c;"></i>
+                        <div class="widget-text">
+                            <div class="widget-value" id="overdueProjects">0</div>
+                            <div class="widget-title">Overdue Projects</div>
+                        </div>
+                    </div>
+                    <div class="widget">
+                        <i data-feather="clock" class="widget-icon" style="color: #3498db;"></i>
+                        <div class="widget-text">
+                            <div class="widget-value" id="avgCompletionTime">0d</div>
+                            <div class="widget-title">Avg Completion</div>
+                        </div>
+                    </div>
+                    <div class="widget">
+                        <i data-feather="trending-up" class="widget-icon" style="color: #2ecc71;"></i>
+                        <div class="widget-text">
+                            <div class="widget-value" id="completionRate">100%</div>
+                            <div class="widget-title">Success Rate</div>
+                        </div>
+                    </div>
+                    <div class="widget">
+                        <i data-feather="users" class="widget-icon" style="color: #9b59b6;"></i>
                         <div class="widget-text">
                             <div class="widget-value" id="totalNames">0</div>
                             <div class="widget-title">Team Members</div>
                         </div>
                     </div>
                 </div>
-                <div class="chart-container card">
+                
+                <div class="charts-grid">
+                    <div class="card chart-container">
+                        <h3>Project Status Distribution</h3>
+                        <canvas id="projectStatusChart"></canvas>
+                    </div>
+                    <div class="card chart-container">
+                        <h3>Workload by Person</h3>
+                        <canvas id="workloadChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analytics" class="page">
+                <h2>Analytics & Insights</h2>
+                <div class="card chart-container">
+                    <h3>Completion Trend (Last 6 Months)</h3>
+                    <canvas id="completionTrendChart"></canvas>
+                </div>
+                <div class="card chart-container">
                     <h3>Projects by Group</h3>
                     <canvas id="projectsByGroupChart"></canvas>
+                </div>
+                <div class="card chart-container" id="overdueAnalysisContainer" style="display: none;">
+                    <h3>Overdue Analysis by Group</h3>
+                    <canvas id="overdueAnalysisChart"></canvas>
                 </div>
             </div>
 
             <!-- Projects Page -->
             <div id="projects" class="page">
-                <h2>All Projects</h2>
+                <h2>Project Management</h2>
+                
+                <!-- Filters Card -->
+                <div class="card filters-card">
+                    <h3>Filters & Search</h3>
+                    <div class="filters-row">
+                        <input type="text" id="search-input" placeholder="Search projects..." class="search-input">
+                        <select id="priority-filter">
+                            <option value="">All Priorities</option>
+                            <option value="high">High Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                        </select>
+                        <select id="status-filter">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                        <select id="person-filter">
+                            <option value="">All People</option>
+                        </select>
+                        <button onclick="clearFilters()" class="secondary">Clear Filters</button>
+                    </div>
+                </div>
+
+                <!-- Create Project Card -->
                 <div class="card">
                     <div class="form-section">
                         <h3>Create New Project</h3>
-                        <div class="form-row">
-                            <input type="text" id="description" placeholder="Description of the project">
-                            <select id="group-select"></select>
-                            <select id="subgroup-select" style="display: none;"></select>
-                            <select id="name-select"></select>
+                        <div class="form-grid">
+                            <input type="text" id="description" placeholder="Project description">
+                            <select id="group-select">
+                                <option value="">Select Group</option>
+                            </select>
+                            <select id="subgroup-select" style="display: none;">
+                                <option value="">Select Subgroup</option>
+                            </select>
+                            <select id="name-select">
+                                <option value="">Assign to</option>
+                            </select>
                             <input type="date" id="dueDate">
-                            <button onclick="addProject()"><i data-feather="plus"></i> Add</button>
+                            <select id="priority-select">
+                                <option value="low">Low Priority</option>
+                                <option value="medium" selected>Medium Priority</option>
+                                <option value="high">High Priority</option>
+                            </select>
+                            <input type="number" id="estimated-hours" placeholder="Est. Hours" min="1">
+                            <input type="number" id="budget" placeholder="Budget ($)" min="0" step="0.01">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="weather-dependent">
+                                <span>Weather Dependent</span>
+                            </label>
+                            <button onclick="addProject()" class="create-btn">
+                                <i data-feather="plus"></i> Create Project
+                            </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- Active Projects -->
                 <div class="card">
                     <h3>Active Projects</h3>
-                    <table id="activeProjectsTable" class="projects-table">
-                        <thead><tr><th>Description</th><th>Group</th><th>Assigned To</th><th>Created On</th><th>Due Date</th><th>Actions</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="table-container">
+                        <table id="activeProjectsTable" class="projects-table">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Priority</th>
+                                    <th>Group</th>
+                                    <th>Assigned To</th>
+                                    <th>Due Date</th>
+                                    <th>Progress</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
+
+                <!-- Completed Projects -->
                 <div class="card">
                     <h3>Completed Projects</h3>
-                    <table id="completedProjectsTable" class="projects-table">
-                        <thead><tr><th>Description</th><th>Group</th><th>Assigned To</th><th>Created On</th><th>Completed On</th><th>Days to Complete</th><th>Actions</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="table-container">
+                        <table id="completedProjectsTable" class="projects-table">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Priority</th>
+                                    <th>Group</th>
+                                    <th>Assigned To</th>
+                                    <th>Completed</th>
+                                    <th>Duration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -98,24 +225,26 @@
                     <div class="card">
                         <h3>Manage Groups & Subgroups</h3>
                         <div class="form-row">
-                             <input type="text" id="newGroupName" placeholder="Enter new group name">
-                             <button onclick="addGroup()"><i data-feather="plus"></i> Add Group</button>
+                            <input type="text" id="newGroupName" placeholder="Enter new group name">
+                            <button onclick="addGroup()"><i data-feather="plus"></i> Add Group</button>
                         </div>
-                        <table id="group-management-table" class="management-table">
-                            <thead>
-                                <tr>
-                                    <th>Group</th>
-                                    <th>Subgroups</th>
-                                </tr>
-                            </thead>
-                            <tbody id="group-list-body"></tbody>
-                        </table>
+                        <div class="table-container">
+                            <table id="group-management-table" class="management-table">
+                                <thead>
+                                    <tr>
+                                        <th>Group</th>
+                                        <th>Subgroups</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="group-list-body"></tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="card">
-                        <h3>Manage Names</h3>
+                        <h3>Manage Team Members</h3>
                         <div class="form-row">
-                            <input type="text" id="newName" placeholder="Enter new name">
-                            <button onclick="addName()"><i data-feather="plus"></i> Add Name</button>
+                            <input type="text" id="newName" placeholder="Enter team member name">
+                            <button onclick="addName()"><i data-feather="plus"></i> Add Member</button>
                         </div>
                         <ul id="name-list" class="item-list"></ul>
                     </div>
@@ -130,16 +259,68 @@
             <h3>Edit Project</h3>
             <input type="hidden" id="edit-project-id">
             <div class="modal-form">
-                <input type="text" id="edit-description" placeholder="Description">
+                <input type="text" id="edit-description" placeholder="Project description">
                 <select id="edit-group-select"></select>
                 <select id="edit-subgroup-select" style="display: none;"></select>
                 <select id="edit-name-select"></select>
                 <input type="date" id="edit-dueDate">
+                <select id="edit-priority-select">
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
+                </select>
+                <input type="number" id="edit-estimated-hours" placeholder="Est. Hours" min="1">
+                <input type="number" id="edit-budget" placeholder="Budget ($)" min="0" step="0.01">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="edit-weather-dependent">
+                    <span>Weather Dependent</span>
+                </label>
             </div>
             <div class="modal-actions">
-                <button id="reopen-btn" class="warning" onclick="reopenProjectFromModal()" style="display: none;">Re-open Project</button>
+                <button id="reopen-btn" class="warning" onclick="reopenProjectFromModal()" style="display: none;">
+                    <i data-feather="rotate-ccw"></i> Re-open Project
+                </button>
                 <button class="secondary" onclick="closeEditModal()">Cancel</button>
                 <button onclick="saveProjectChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div id="progress-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content card">
+            <h3>Update Progress</h3>
+            <input type="hidden" id="progress-project-id">
+            <div class="progress-controls">
+                <label for="progress-slider">Progress: <span id="progress-value">0</span>%</label>
+                <input type="range" id="progress-slider" min="0" max="100" value="0" class="progress-slider">
+                <div class="progress-visual">
+                    <div class="progress-bar-modal">
+                        <div class="progress-fill-modal" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeProgressModal()">Cancel</button>
+                <button onclick="saveProgress()">Update Progress</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <div id="notes-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content card">
+            <h3>Project Notes</h3>
+            <input type="hidden" id="notes-project-id">
+            <div class="notes-container">
+                <div id="notes-list" class="notes-list"></div>
+                <div class="add-note">
+                    <textarea id="new-note" placeholder="Add a note..." rows="3"></textarea>
+                    <button onclick="addNote()"><i data-feather="plus"></i> Add Note</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeNotesModal()">Close</button>
             </div>
         </div>
     </div>

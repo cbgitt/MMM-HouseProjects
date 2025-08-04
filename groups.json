@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "id": 1753102934620,
+    "name": "House",
+    "subgroups": [
+      {
+        "id": 1753102964269,
+        "name": "Basement"
+      },
+      {
+        "id": 1753102970343,
+        "name": "Kitchen"
+      },
+      {
+        "id": 1754228518337,
+        "name": "HVAC"
+      }
+    ]
+  },
+  {
+    "id": 1753102954005,
+    "name": "Yard",
+    "subgroups": []
+  },
+  {
+    "id": 1753102958044,
+    "name": "Car",
+    "subgroups": [
+      {
+        "id": 1754228554916,
+        "name": "Alfa"
+      },
+      {
+        "id": 1754228561417,
+        "name": "Lincoln"
+      }
+    ]
+  },
+  {
+    "id": 1754228546177,
+    "name": "ARL House",
+    "subgroups": []
+  }
+]
